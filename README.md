@@ -1,7 +1,7 @@
 # Pang
 Pattern Mining for the Classification of Public Procurement Fraud
 
-Copyright 2019 Lucas Potin, Rosa Figueiredo, Christine Largeron, Vincent Labatut
+Copyright 2022 Lucas Potin, Rosa Figueiredo, Christine Largeron, Vincent Labatut
 
 Pang is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation. For source availability and license information see licence.txt
 
