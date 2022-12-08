@@ -8,11 +8,9 @@ Pang is free software: you can redistribute it and/or modify it under the terms 
 * Contact: Lucas Potin lucas.potin@univ-avignon.fr
 
 ## Description
-Pang is an algorithm 
+Pang is an algorithm which represent and classify a collection of graphs according to their frequent patterns.
 
-The data available in the data repository are extracted from FOPPA, a database of French public procurement.
-## Organization
-TBC
+The data available in the data repository are extracted from FOPPA, a database of French public procurement. 
 
 ## Installation
 You first need to install `python` and the required packages:
