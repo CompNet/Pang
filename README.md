@@ -39,6 +39,8 @@ Tested with `python` version 3.8.0, with the following packages:
 
 ## References
 
-[XX'19] X. Yyyyyy & A. Bbbbbb, My title, My journal, X(X)/XX-XX, 201X. doi: XXXXXXXXXX - ⟨hal-XXXXXXXX⟩
+[EGC'2023] Potin, L., Figueiredo, R., Labatut, V. & Largeron, C., Extraction de motifs pour la détection d’anomalies
+dans des graphes : application à la fraude dans les
+marchés publics. My journal, X(X)/XX-XX, 201X. doi: XXXXXXXXXX - ⟨hal-XXXXXXXX⟩
 
 Fournier-Viger, P., Gomariz, A., Gueniche, T., Soltani, A., Wu., C., Tseng, V. S. (2014). SPMF: a Java Open-Source Pattern Mining Library. Journal of Machine Learning Research (JMLR), 15: 3389-3393.
