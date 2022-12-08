@@ -13,7 +13,13 @@ Description
 TBC
 
 ## Installation
-TBC
+You first need to install `python` and the required packages:
+
+1. Install the [`python` language](https://www.python.org)
+2. Download this project from GitHub and unzip.
+3. Install the required packages: 
+
+The source code of SPMF in order to use TKG is available [here](https://www.philippe-fournier-viger.com/spmf/index.php?link=download.php)
 
 ## Use
 TBC
