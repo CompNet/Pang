@@ -28,12 +28,11 @@ The source code of SPMF in order to use TKG is available [here](https://www.phil
 ## Dependencies
 Tested with `SPMF` version 2.54
 Tested with `python` version 3.8.0, with the following packages:
-* [`pandas`](https://pypi.org/project/pandas/): version 1.1.54.
-* [`numpy`](https://pypi.org/project/numpy/): version 2.1.0.
-* [`numpy`](https://pypi.org/project/numpy/): version 2.1.0.
-* [`networkx`](https://pypi.org/project/numpy/): version 2.1.0.
-* [`sklearn`](https://pypi.org/project/numpy/): version 2.1.0.
-* [`matplotlib`](https://pypi.org/project/numpy/): version 2.1.0.
+* [`pandas`](https://pypi.org/project/pandas/): version 1.3.5
+* [`numpy`](https://pypi.org/project/numpy/): version 1.22.4
+* [`networkx`](https://pypi.org/project/numpy/): version 2.6.3
+* [`sklearn`](https://pypi.org/project/numpy/): version 0.0
+* [`matplotlib`](https://pypi.org/project/numpy/): version 3.6.0
 
 ## References
 
