@@ -1,10 +1,12 @@
-# Pang
-Pattern Mining for the Classification of Public Procurement Fraud
+Pang : Pattern Mining for the Classification of Public Procurement Fraud
+-------------------------------------------------------------------------
 
 Copyright 2022 Lucas Potin, Rosa Figueiredo, Christine Largeron, Vincent Labatut
 
 Pang is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation. For source availability and license information see licence.txt
 
+* **Lab site:** http://lia.univ-avignon.fr
+* **GitHub repo:** https://github.com/CompNet/Pang
 * Contact: Lucas Potin lucas.potin@univ-avignon.fr
 
 ## Description
@@ -12,18 +14,26 @@ Pang is an algorithm which represent and classify a collection of graphs accordi
 
 The data available in the data repository are extracted from FOPPA, a database of French public procurement. 
 
-## Installation
+# Organization
+This repository is composed of the following elements:
+* `requirements.txt` : List of Python packages used in pang.py.
+* `pang.py` : Python script in order to use the algorithm.
+* `data` : folder with the input files needed.
+
+
+# Installation
 You first need to install `python` and the required packages:
 
 1. Install the [`python` language](https://www.python.org)
 2. Download this project from GitHub and unzip.
-3. Install the required packages: 
+3. Execute `pip install -r requirements.txt` to install the required packages (see also the *Dependencies* Section).
 
 The source code of SPMF in order to use TKG is available [here](https://www.philippe-fournier-viger.com/spmf/index.php?link=download.php)
 
 ## Use
-
-
+In order to use Pang:
+1. Open the Python console.
+2. Run `pang.py`.
 
 ## Dependencies
 Tested with `SPMF` version 2.54
