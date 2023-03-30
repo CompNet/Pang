@@ -1,5 +1,3 @@
-# Generate documentation: pydoc -w PangReform
-
 
 from networkx.algorithms import isomorphism
 from networkx.algorithms.isomorphism import ISMAGS
@@ -503,8 +501,6 @@ def graphKeep(PatternRed,fileLabel,nbV,nbE,MegaRES):
     return keep
                 
 def main(argv):
-    inputfile = ''
-    outputfile = ''
     opts, args = getopt.getopt(argv,"hd:o:k:",["ifile=","ofile="])
     for opt, arg in opts:
       if opt == '-h':
