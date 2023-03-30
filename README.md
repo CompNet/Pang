@@ -29,7 +29,9 @@ The VF2 and ISMAGS algortihms are implemented into the Networkx library(https://
 We use the same format as SPMF for the graph input files. Each graph is defined as follow.
 
 t # N  N: graph id
+
 v M L  M: node id, L: node label
+
 e P Q L P: source node id, Q: destination node id, L: edge label
 
 For the patterns output files, each pattern contains one more line than the graphs.
