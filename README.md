@@ -29,7 +29,7 @@ The VF2 and ISMAGS algortihms are implemented into the Networkx library(https://
 ## Use
 In order to use Pang:
 1. Open the Python console.
-2. Run `pang.py`.
+2. Run `PANG.py`.
 
 ## Dependencies
 Tested with `SPMF` version 2.54
