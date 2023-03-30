@@ -37,6 +37,25 @@ from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.model_selection import cross_val_score
 
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_validate
+from sklearn import tree
+import graphviz
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.svm import SVC
+
+def read_Sizegraph(fileName):
+    """Read the number of graphs in a file.
+    Input: fileName (string) : the name of the file
+    Ouptut: TAILLE (int) : the number of graphs in the file"""
+    
+    file = open(fileName, "r")
+    nbGraph=0
+    for line in file:
+       if line[0]=="t":
+            nbGraph=nbGraph+1
+    return nbGraph
+
 def load_graphs(fileName,TAILLE):
     """Load graphs from a file.
     args: fileName (string) : the name of the file)
@@ -293,39 +312,31 @@ def recupLabel(fileLabel):
         numero=numero+1
     return labels
 
-def KVector(NbRed,NbNonRed,keep,K,id_graphs,numberoccurences,MotifGardes,diff,TAILLEGRAPHE,TAILLEPATTERN,labels):
-    # This function computes the K best motifs for each graph
-     
-    dicoMotifs = []
-    RED=[]
-    NONRED=[]
-    for i in range(TAILLEGRAPHE):
-        dicoMotifs.append({})
-    if MotifGardes==None:
-        MotifGardes = []
-        Scores=[]
-        for i in range(K):
-            if sum(diff)==0:
-                break
-            maxi = np.max(diff)
-            argmaxi = np.argmax(diff)
-            MotifGardes.append(argmaxi)
-            Scores.append(maxi)
-            RED.append(NbRed[argmaxi])
-            NONRED.append(NbNonRed[argmaxi])
-            diff[argmaxi]=0
-    ## Reduction Vectorielle
-    #Motifsbest       
-    #Creer les arrays de presence Red
-    ResumePresence = []
+def KVector(K,diff,id_graphs,numberoccurences,LENGTHGRAPH,labels):
+    """ this fuction creates the vectorial representation of the graphs
+        Input : K (int) : the number of patterns to keep
+        diff (list of int) : the list of discrimination scores of each pattern
+        id_graphs (list of list of int) : the list of graphs containing of each pattern
+        numberoccurences (list of list of int) : the list of number occurences of each pattern in each graph
+        LENGTHGRAPH (int) : the number of graphs
+        labels (list of int) : the list of labels of the graphs
+        
+        
+        Output : X (list of list of int) : the vectorial representation of the graphs
+        Y (list of int) : the list of labels of the graphs""" 
+    keepPatterns = []
+    for i in range(K):
+        if sum(diff)==0:
+            break
+        bestScore = np.max(diff)
+        bestPattern = np.argmax(diff)
+        keepPatterns.append(bestPattern)
+        diff[bestPattern]=0
+    vectorialRep = []
     newLabels = []
-    for j in range(TAILLEGRAPHE):#330
-            ResumePresence.append([])
-            val = j
-            v = set()
-            for k in MotifGardes:
-                for l in id_graphs[k]:
-                    v.add(l)
+    for j in range(LENGTHGRAPH):#330
+            vectorialRep.append([])
+            for k in keepPatterns:
                 if j in id_graphs[k]:
                     for t in range(len(id_graphs[k])):
                         if id_graphs[k][t]==j:
@@ -333,18 +344,12 @@ def KVector(NbRed,NbNonRed,keep,K,id_graphs,numberoccurences,MotifGardes,diff,TA
                                 occu=1
                             else:
                                 occu = numberoccurences[k][t]
-                    ResumePresence[j].append(occu)
+                    vectorialRep[j].append(occu)
                 else:
-                    ResumePresence[j].append(0)
-    newResumePresence=[]
-    for j in range(TAILLEGRAPHE):#330
-        if not(labels[j]=="miss"):
-            if j in keep:
-                newResumePresence.append(ResumePresence[j])
-                newLabels.append(labels[j])
-    X = newResumePresence
+                    vectorialRep[j].append(0)
+    X = vectorialRep
     Y = newLabels
-    return X,Y,Scores,MotifGardes,RED,NONRED
+    return X,Y
 
 def test(X,Y,classifier):
     test_pred_decision_tree = classifier.predict(X)
@@ -363,10 +368,10 @@ def Expe(keep,Ks,fileLabel,out,id_graphs,occurences,coverage,MODE,MotifGardes,TA
     patterns = []
     labels,coefficient =recupLabel(fileLabel)
     file = open(out,"a")
-    if MODE == "Support":
-        diffDelta,diffCORK,NbRed,NbNonRed = computeScoreMono(keep,labels,id_graphs,TAILLEPATTERN,1)
-    if MODE =="Occurences":
-        diffDelta,diffCORK,NbRed,NbNonRed = computeScoreOccurences(keep,occurences,coverage,labels,id_graphs,TAILLEPATTERN,1)
+    if MODE == "support":
+        diffDelta = computeScoreMono(keep,labels,id_graphs,TAILLEPATTERN,1)
+    if MODE =="occurences":
+        diffDelta = computeScoreOccurences(keep,occurences,coverage,labels,id_graphs,TAILLEPATTERN,1)
     for K in Ks:
         nom=str(K)+"Prediction.txt"
         fileBis=open(nom,"w")
@@ -502,7 +507,7 @@ def graphKeep(PatternRed,fileLabel,nbV,nbE,MegaRES):
 
 
 
-def cross_validation(X,Y,cv,classifier,nb_folds):
+def cross_validation(X,Y,cv,classifier):
     #store for each fold the F1 score of each class
     F1_score0 = []
     F1_score1 = []
@@ -535,27 +540,43 @@ def cross_validation(X,Y,cv,classifier,nb_folds):
     F1_score1_std = np.std(F1_score1)
     #return the mean and standard deviation of the F1 score of each class
     return F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std
-    
-#Function for experimentation 
-# we give a dataset, a value of K
-# compute the discrimination score of each pattern
-# Create the representation using the K best patterns
-# For each representation, use the cross validation function to compute the F1 score of each class
-
-def Experimentation(dataset,K,mode):
-    #get the dataset
-    X,Y,nbV,nbE = get_dataset(dataset)
-    #compute the discrimination score of each pattern
-    numo,patterns = computeScoreMono(X,Y,mode)
-    #create the representation using the K best patterns
-    PatternRed = create_representation(X,numo,K)
-    #compute the F1 score of each class
-    F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std = cross_validation(PatternRed,Y,cv,classifier,nb_folds)
-    #return the F1 score of each class
-    return F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std              
 
 
+def pangProcessing(keep,labels,id_graphs_mono,id_graphs_iso,TAILLEPATTERN):
+    cv = StratifiedKFold(n_splits=10,shuffle=True)
+    scoresGenBin = computeScoreMono(keep,labels,id_graphs_mono,TAILLEPATTERN,1)
+    scoresGenOcc = computeScoreMono(keep,labels,id_graphs_iso,TAILLEPATTERN,1)
+    scoresIndBin = computeScoreOccurences(keep,labels,id_graphs_iso,TAILLEPATTERN,1)
+    scoresIndOccn = computeScoreOccurences(keep,labels,id_graphs_iso,TAILLEPATTERN,1)
+    for K in Ks:
+        X_GenBin,Y_GenBin,numo,DiscriPat,RED,NONRED = KVector(keep,K,id_graphs,occurences,None,temp,TAILLEGRAPHE,TAILLEPATTERN,labels)
+        X_GenOcc,Y_GenOcc,numo,DiscriPat,RED,NONRED = KVector(keep,K,id_graphs,occurences,None,temp,TAILLEGRAPHE,TAILLEPATTERN,labels)
+        X_IndBin,Y_IndBin,numo,DiscriPat,RED,NONRED = KVector(keep,K,id_graphs,occurences,None,temp,TAILLEGRAPHE,TAILLEPATTERN,labels)
+        X_IndOcc,Y_IndOcc,numo,DiscriPat,RED,NONRED = KVector(keep,K,id_graphs,occurences,None,temp,TAILLEGRAPHE,TAILLEPATTERN,labels)
+        results = np.zeros((4,2,2))
+        representations = [[X_GenBin,Y_GenBin],[X_GenOcc,Y_GenOcc],[X_IndBin,Y_IndBin],[X_IndOcc,Y_IndOcc]]:
+        for i in range(len(representations)):
+            results[i][0][0],results[i][0][1],results[i][1][0],results[i][1][1] = cross_validation(representations[i][0],representations[i][1],cv,SVC(c=1000))
+        outputResults(K,results,"data/"+str(K)+"results.txt")
+    return 0
 
+def outputResults(K,results, output_file):
+    """ function to output the results of the cross validation
+        Input : K : number of patterns
+        results : array containing the results of the cross validation
+        output_file : file where the results will be written"""
+    with open(output_file, 'w') as f:
+        f.write("Results for K = "+str(K)+ " \n")
+        for i in range(len(results)):
+            f.write("Representation "+str(i)+"\n")
+            f.write("F1 score for class 0: "+str(results[i][0][0])+" +/- "+str(results[i][0][1])+"\n")
+            f.write("F1 score for class 1: "+str(results[i][1][0])+" +/- "+str(results[i][1][1])+"\n")
+    f.close()
+
+def printBestPattern(patterns,labels):
+    for i in range(len(patterns)):
+        if labels[i]==1:
+            print(patterns[i])
 def main(argv):
     opts, args = getopt.getopt(argv,"hd:o:k:",["ifile=","ofile="])
     for opt, arg in opts:
@@ -563,55 +584,14 @@ def main(argv):
          print ('PANG.py -d <dataset> -k<values of K> -m<mode>')
          sys.exit()
       elif opt in ("-d"):
-            if arg=="PTC":
-                TAILLEGRAPHE=350
-                TAILLEPATTERN=235199 
-                FILEGRAPHS="PTC_FR.txt" 
-                FILESUBGRAPHS="PTC_FR_TKG.txt" 
-                FILEMONOSET="PTC_FR_MONO_SET_TKG.txt" 
-                FILEISOSET="PTC_FR_MONO_SET_TKG.txt" 
-                FILELABEL = "ptc_label.txt"
-            elif arg=="MUTAG":
-                TAILLEGRAPHE=188
-                TAILLEPATTERN=14479
-                FILEGRAPHS="mutag_graph.txt" 
-                FILESUBGRAPHS="mutag_pattern_10.txt" 
-                FILEMONOSET="mutag_results_mono_1.txt" 
-                FILEISOSET="mutag_results_iso_1.txt"
-                FILELABEL = "mutag_label.txt"
-            elif arg=="DECOMAP":
-                TAILLEGRAPHE=660
-                TAILLEPATTERN=15793
-                FILEGRAPHS="Graphes.txt" 
-                FILESUBGRAPHS="Pattern.txt" 
-                FILEMONOSET="Decomap_Mono_Set.txt" 
-                FILEISOSET="Decomap_Iso_Set.txt" 
-                FILELABEL="decomap_label.txt"
-            elif arg=="NCI1":
-                TAILLEGRAPHE=4110
-                TAILLEPATTERN=57817
-                FILEGRAPHS="nci1_graph.txt" 
-                FILESUBGRAPHS="nci1_pattern_10_bis.txt" 
-                FILEMONOSET="nci1_results_mono_1.txt" 
-                FILEISOSET="nci1_results_iso_1.txt" 
-                FILELABEL = "nci1_label.txt"
-            elif arg=="NCI109":
-                TAILLEGRAPHE=4127
-                TAILLEPATTERN=58866
-                FILEGRAPHS="nci109_graph.txt" 
-                FILESUBGRAPHS="nci109_pattern_10_bis.txt" 
-                FILEMONOSET="nci109_results_mono_1.txt" 
-                FILEISOSET="nci109_results_iso_1.txt" 
-                FILELABEL = "nci109_label.txt"
-            else:
-                NAME=arg
-                FILEGRAPHS=NAME+"_graph.txt" 
-                FILESUBGRAPHS=NAME+"_pattern.txt" 
-                FILEMONOSET=NAME+"_mono.txt" 
-                FILEISOSET=NAME+"_iso.txt" 
-                FILELABEL = NAME+"_label.txt"
-                TAILLEGRAPHE=4127
-                TAILLEPATTERN=58866
+            folder="data/"
+            FILEGRAPHS=folder+str(arg)+"_graph.txt"
+            FILESUBGRAPHS=folder+str(arg)+"_pattern.txt"
+            FILEMONOSET=folder+str(arg)+"_mono.txt"
+            FILEISOSET=folder+str(arg)+"_iso.txt"
+            FILELABEL =folder+str(arg)+"_label.txt"
+            TAILLEGRAPHE=read_Sizegraph(FILEGRAPHS)
+            TAILLEPATTERN=read_Sizegraph(FILESUBGRAPHS)
       elif opt in ("-k"):
          Ks=[]
          temp=arg
@@ -623,21 +603,23 @@ def main(argv):
     for i in range(TAILLEGRAPHE):
         if i not in dele:
             keep.append(i)
+            
     """loading graphs"""
     Graphes,useless_var,PatternsRed= load_graphs(FILEGRAPHS,TAILLEGRAPHE)
-    
     """loading patterns"""
     Subgraphs,id_graphs,noms = load_graphs(FILESUBGRAPHS,TAILLEPATTERN)
+    
+    """loading processed patterns"""
     xx,id_graphsMono,numberoccurencesMono = load_patterns(FILEMONOSET,TAILLEPATTERN)
     xx,id_graphsIso,numberoccurencesIso = load_patterns(FILEISOSET,TAILLEPATTERN)
-
-    filler=None
-    MegaRES=[]
-    keep = graphKeep(PatternsRed,FILELABEL,nbV,nbE,MegaRES)
+    keep = graphKeep(PatternsRed,FILELABEL)
+    
+    
     numoA,pattA =Expe(keep,Ks,FILELABEL,"DecoMonoCGZ.txt",id_graphs,None,None,"Support",None,TAILLEGRAPHE,TAILLEPATTERN,cv,"DELTA")
     numoB,pattB =Expe(keep,Ks,FILELABEL,"DecoOccu.txt",id_graphsMono,numberoccurencesMono,coverageMono,"Occurences",None,TAILLEGRAPHE,TAILLEPATTERN,cv,"DELTA")
     numoC,pattC =Expe(keep,Ks,FILELABEL,"DecoIso.txt",id_graphsIso,None,coverageIso,"Support",None,TAILLEGRAPHE,TAILLEPATTERN,cv,"DELTA")
     numoD,pattD =Expe(keep,Ks,FILELABEL,"DecoDouble.txt",id_graphsIso,numberoccurencesIso,coverageIso,"Occurences",None,TAILLEGRAPHE,TAILLEPATTERN,cv,"DELTA")
+
 if __name__ == "__main__":
    print(sys.argv)
    main(sys.argv[1:])
