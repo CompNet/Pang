@@ -52,6 +52,8 @@ If you want to use Pang with your own data, you need to create a `XXX` folder in
 2. Run `ProcessingPattern.py`with the option -d XXX in order to create the files XXX_mono.txt and XXX_iso.txt.
 3. Run `PANG.py` with the option -d XXX in order to run Pang on the data XXX.
 
+For each value of the parameter `k`, Pang will create a file `KResults.txt` containing the results of the classification and a file `KPatterns.txt` containing the patterns.
+
 ## Dependencies
 Tested with `SPMF` version 2.54
 Tested with `python` version 3.8.0, with the following packages:
