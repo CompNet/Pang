@@ -1,8 +1,10 @@
-Pang : Pattern-Based Anomaly Detection in Graphs
--------------------------------------------------------------------------
+Pang
+=======
+*Pattern-Based Anomaly Detection in Graphs*
 
 Pang is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation. For source availability and license information see licence.txt
 
+-----------------------------------------------------------------------
 
 # Description
 Pang is an algorithm which represents and classifies a collection of graphs according to their frequent patterns (subgraphs).
