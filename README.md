@@ -1,13 +1,7 @@
 Pang : Pattern Mining for the Classification of Public Procurement Fraud
 -------------------------------------------------------------------------
 
-Copyright 2022 Lucas Potin, Rosa Figueiredo, Christine Largeron, Vincent Labatut
-
 Pang is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation. For source availability and license information see licence.txt
-
-* **Lab site:** http://lia.univ-avignon.fr
-* **GitHub repo:** https://github.com/CompNet/Pang
-* Contact: Lucas Potin lucas.potin@univ-avignon.fr
 
 ## Description
 Pang is an algorithm which represent and classify a collection of graphs according to their frequent patterns.
@@ -17,7 +11,8 @@ The data available in the data repository are extracted from FOPPA, a database o
 # Organization
 This repository is composed of the following elements:
 * `requirements.txt` : List of Python packages used in pang.py.
-* `pang.py` : Python script in order to use the algorithm.
+* `PANG.py` : Python script in order to use the algorithm.
+* `ProcessingPattern.py` : Python script in order to compute the number of occurences and the set of induced patterns
 * `data` : folder with the input files needed.
 
 
