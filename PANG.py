@@ -499,7 +499,63 @@ def graphKeep(PatternRed,fileLabel,nbV,nbE,MegaRES):
                 graphes.append(PatternRed[i])
     print(len(keep))
     return keep
-                
+
+
+
+def cross_validation(X,Y,cv,classifier,nb_folds):
+    #store for each fold the F1 score of each class
+    F1_score0 = []
+    F1_score1 = []
+    #reset the classifier
+    classifier.reset()
+    # for each fold
+    for train_index, test_index in cv.split(X,Y):
+        #split the dataset into train and test
+        X_train=[]
+        X_test=[]
+        y_train=[]
+        y_test=[]
+        for l in train_index:
+            X_train.append(X[l])
+            y_train.append(Y[l])
+        for l in test_index:
+            X_test.append(X[l])
+            y_test.append(Y[l])
+        #train the classifier
+        classifier.train(X_train,y_train)
+        #test the classifier
+        classifier.test(X_test,y_test)
+        #add the F1 score of each class to the array
+        F1_score0.append(classifier.F1_score0)
+        F1_score1.append(classifier.F1_score1)
+    #compute the mean and standard deviation of the F1 score of each class
+    F1_score0_mean = np.mean(F1_score0)
+    F1_score0_std = np.std(F1_score0)
+    F1_score1_mean = np.mean(F1_score1)
+    F1_score1_std = np.std(F1_score1)
+    #return the mean and standard deviation of the F1 score of each class
+    return F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std
+    
+#Function for experimentation 
+# we give a dataset, a value of K
+# compute the discrimination score of each pattern
+# Create the representation using the K best patterns
+# For each representation, use the cross validation function to compute the F1 score of each class
+
+def Experimentation(dataset,K,mode):
+    #get the dataset
+    X,Y,nbV,nbE = get_dataset(dataset)
+    #compute the discrimination score of each pattern
+    numo,patterns = computeScoreMono(X,Y,mode)
+    #create the representation using the K best patterns
+    PatternRed = create_representation(X,numo,K)
+    #compute the F1 score of each class
+    F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std = cross_validation(PatternRed,Y,cv,classifier,nb_folds)
+    #return the F1 score of each class
+    return F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std              
+
+
+
 def main(argv):
     opts, args = getopt.getopt(argv,"hd:o:k:",["ifile=","ofile="])
     for opt, arg in opts:

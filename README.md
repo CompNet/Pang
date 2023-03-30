@@ -15,7 +15,6 @@ This repository is composed of the following elements:
 * `ProcessingPattern.py` : Python script in order to compute the number of occurences and the set of induced patterns
 * `data` : folder with the input files needed.
 
-
 # Installation
 You first need to install `python` and the required packages:
 
@@ -24,6 +23,8 @@ You first need to install `python` and the required packages:
 3. Execute `pip install -r requirements.txt` to install the required packages (see also the *Dependencies* Section).
 
 The source code of SPMF in order to use TKG is available [here](https://www.philippe-fournier-viger.com/spmf/index.php?link=download.php)
+
+The VF2 and ISMAGS algortihms are implemented into the Networkx library(https://networkx.org/)
 
 ## Use
 In order to use Pang:
