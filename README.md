@@ -31,17 +31,16 @@ The source code of SPMF in order to use TKG is available [here](https://www.phil
 
 The VF2 and ISMAGS algortihms are included in the [`Networkx` library](https://networkx.org/)
 
-**<Incomplet : y a pas un script pour installer tout ce qui est nécessaire ?>**
-
 
 # Use
+
 
 ## To Replicate the Paper Experiments
 In order to use Pang:
 1. Open the Python console.
-2. Run `PANG.py`.
+2. Run `EMCL.py`
 
-**<Et ça fait quoi ? / produit quoi comme fichiers ?>**
+The script will compute the results of the experiments and save the results associated with Table 2, 5 and 6 in the `results` folder.
 
 
 ## To Apply PANG to Other Data
@@ -57,6 +56,8 @@ Then you need to run a script to produce the data files that will be used by Pan
 
 For each value of the parameter `k`, Pang will create a file `KResults.txt` containing the results of the classification and a file `KPatterns.txt` containing the patterns.
 
+ ## To Reconstruct all patterns for a dataset
+ If you want to reconstruct all patterns using SPMF for a dataset, you need to run the associated script in the `scripts` folder. This process involves pattern mining and post processing for each pattern and is therefore time consuming. Each file will be saved in the associated `data` folder.
 
 ## Data Format
 We use the same format as SPMF for the graph input files. Each graph is defined as follows:
