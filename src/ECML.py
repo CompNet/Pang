@@ -404,6 +404,7 @@ def cross_validation(X,Y,cv,classifier):
     F1_score0_std = np.std(F1_score0)
     F1_score1_mean = np.mean(F1_score1)
     F1_score1_std = np.std(F1_score1)
+    print(F1_score1_mean)
     #return the mean and standard deviation of the F1 score of each class
     return F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std
 
@@ -433,8 +434,8 @@ from grakel.kernels import WeisfeilerLehman, VertexHistogram, WeisfeilerLehmanOp
 def Baselines(index,DATASET,Graphes,cv,labels,results):
     """ this function computes the baseline results for the graph classification task
         baselines are : WL, WLOA, Graph2Vec, DGCNN.""" 
-    dicoC = {"MUTAG":1,"NCI1":1,"NCI109":1,"PTC":1,"DD":1,"FOPPA":1}
-    model=Graph2Vec(attributed=True,epochs=100)
+    dicoC = {"MUTAG":1000,"NCI1":100,"NCI109":1,"PTC":100,"DD":1,"FOPPA":100}
+    model=Graph2Vec(attributed=True,epochs=1000)
     fitGraph = copy.deepcopy(Graphes)
     model.fit(fitGraph)
     GraphesB=model.get_embedding()  
@@ -504,7 +505,7 @@ def Baselines(index,DATASET,Graphes,cv,labels,results):
     #second index : the class
     #third index : 0 for the mean, 1 for the standard deviation
     results[index][6][0][0]=np.mean(f0WL)
-    results[index][0][1]=np.std(f0WL)
+    results[index][6][0][1]=np.std(f0WL)
     results[index][6][1][0]=np.mean(f1WL)
     results[index][6][1][1]=np.std(f1WL)
     results[index][7][0][0]=np.mean(f0WLOA)
@@ -526,8 +527,8 @@ def Baselines(index,DATASET,Graphes,cv,labels,results):
 def Table2():
     """ this function computes the results of the table 1 of the paper
         results are saved in a csv file in the folder results"""
-    DATASETS = ["MUTAG","PTC","FOPPA"]
-    Ks = {"MUTAG": 3, "NCI1": 3, "DD": 3, "PTC": 3, "FOPPA": 3}
+    DATASETS = ["MUTAG","FOPPA","PTC"]
+    Ks = {"MUTAG": 150, "NCI1": 3, "DD": 3, "PTC": 150, "FOPPA": 500}
     results = np.zeros((len(DATASETS),10,2,2))
     for DATASET in DATASETS:
         arg=DATASET
@@ -548,7 +549,7 @@ def Table2():
         Subgraphs,id_graphs,noms = load_graphs(FILESUBGRAPHS,PATTERNLENGTH)
         xx,id_graphs_mono,occurences_mono = load_patterns(FILEMONOSET,PATTERNLENGTH)
         xx,id_graphs_iso,occurences_iso = load_patterns(FILEISOSET,PATTERNLENGTH)
-        cgSubgraphs,id_cg,noms = load_graphs(FILECGGRAPH,CGLENGTH)
+        cgSubgraphs,id_graphs_cg,noms = load_graphs(FILECGGRAPH,CGLENGTH)
         xx,id_cg_mono,occurences_cg_mono = load_patterns(FILECGMONO,CGLENGTH)
         
         
@@ -559,11 +560,15 @@ def Table2():
         scoresGenOcc = computeScoreOccurences(keep,labels,id_graphs_mono,occurences_mono,PATTERNLENGTH)
         scoresIndBin = computeScoreMono(keep,labels,id_graphs_iso,PATTERNLENGTH)
         scoresIndOcc = computeScoreOccurences(keep,labels,id_graphs_iso,occurences_iso,PATTERNLENGTH)
+        scoresCloBin = computeScoreMono(keep,labels,id_graphs_cg,CGLENGTH)
+        scoresCloOcc = computeScoreOccurences(keep,labels,id_graphs_cg,occurences_cg_mono,CGLENGTH)
         X_GenBin,Y = KVector(keep,Ks[DATASET],scoresGenBin,id_graphs_mono,None,GRAPHLENGTH,labels)
         X_GenOcc,Y = KVector(keep,Ks[DATASET],scoresGenOcc,id_graphs_mono,occurences_mono,GRAPHLENGTH,labels)
         X_IndBin,Y = KVector(keep,Ks[DATASET],scoresIndBin,id_graphs_iso,None,GRAPHLENGTH,labels)
         X_IndOcc,Y = KVector(keep,Ks[DATASET],scoresIndOcc,id_graphs_iso,occurences_iso,GRAPHLENGTH,labels)
-        representations = [[X_GenBin,Y],[X_GenOcc,Y],[X_IndBin,Y],[X_IndOcc,Y]]
+        X_CloBin,Y = KVector(keep,Ks[DATASET],copy.deepcopy(scoresCloBin),id_graphs_cg,None,GRAPHLENGTH,labels)
+        X_CloOcc,Y = KVector(keep,Ks[DATASET],copy.deepcopy(scoresCloOcc),id_graphs_cg,occurences_cg_mono,GRAPHLENGTH,labels) 
+        representations = [[X_GenBin,Y],[X_GenOcc,Y],[X_IndBin,Y],[X_IndOcc,Y],[X_CloBin,Y],[X_CloOcc,Y]]
         for i in range(len(representations)):
             #fill in results for :
             # first index : dataset
@@ -572,10 +577,11 @@ def Table2():
         #keep only graphs which are in keep
         Graphs = [Graphes[i] for i in keep]
         results = Baselines(DATASETS.index(DATASET),DATASET,Graphs,cv,Y,results)
-    data = pd.DataFrame(index=range(results[0]),columns=DATASETS)
-    for i in range(len(results)):
+        print(results)
+    data = pd.DataFrame(index=range(len(results[0])),columns=DATASETS)
+    for i in range(len(results[0])):
         for j in DATASETS:
-            data[j][i]=str(results[i][j][1][0])[0:4]+" ("+str(results[i][j][1][1])[0:4]+")"
+            data[j][i]=str(results[DATASETS.index(j)][i][1][0])[0:4]+" ("+str(results[DATASETS.index(j)][i][1][1])[0:4]+")"
     data.to_csv("../results/Table2.csv",index=False)
           
     
