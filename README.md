@@ -27,9 +27,15 @@ You first need to install `python` and the required packages:
 2. Download this project from GitHub and unzip.
 3. Execute `pip install -r requirements.txt` to install the required packages (see also the *Dependencies* Section).
 
-The source code of SPMF in order to use TKG is available [here](https://www.philippe-fournier-viger.com/spmf/index.php?link=download.php)
+The source code of SPMF in order to use gSpan and cgSpan is available [here](https://www.philippe-fournier-viger.com/spmf/index.php?link=download.php)
 
 The VF2 and ISMAGS algortihms are included in the [`Networkx` library](https://networkx.org/)
+
+For the baselines:
+* The WL and WLOA algorithms are included in the Grakel library, available [here](https://ysig.github.io/GraKeL/0.1a8/benchmarks.html)
+* Graph2Vec is included in the karateclub library, available [here](https://karateclub.readthedocs.io/en/latest/)
+* DGCNN is included in the stellargraph library, available [here](https://stellargraph.readthedocs.io/en/stable/).
+* We use the implementation of CORK from Marisa Thoma. This implementation is available in the `CORKcpp.zip` archive.
 
 
 # Use
