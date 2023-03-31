@@ -645,7 +645,7 @@ def Table6(Ks,keep,labels,id_graphs_mono,id_graphs_iso,id_graphs_cg,occurences_m
 
 if __name__ == '__main__':
     print("Computing results for Table 2")
-    #Table2()
+    Table2()
     print("Computing results for Table 5")
     arg="FOPPA"
     folder="../data/"+str(arg)+"/"
