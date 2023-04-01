@@ -123,7 +123,86 @@ def load_graphs(fileName,TAILLE):
             dicoNodes[j]=labelVertices[i][j]
         for j in range(int(edges[i])):
             graphes[i].add_edge(labelEdges[i][j][0],labelEdges[i][j][1],feature=labelEdges[i][j][2])
-        graphes[i].add_nodes_from([(node, {'feature': attr}) for (node, attr) in dicoNodes.items()])
+        graphes[i].add_nodes_from([(node, {'feature':attr}) for (node, attr) in dicoNodes.items()])
+    return graphes,numbers,noms
+def load_graphs_DGCNN(fileName,TAILLE):
+    """Load graphs from a file.
+    args: fileName (string) : the name of the file)
+    TAILLE (int) : the number of graphs in the file
+    
+    return: graphs (list of networkx graphs) : the list of graphs
+    numbers (list of list of int) : the list of occurences of each graph
+    nom (list of string) : the list of names of each graph)"""
+    
+    nbV=[]
+    nbE=[]
+    numbers = []
+    noms = []
+    for i in range(TAILLE):
+        numbers.append([])
+    ## Variables de stockage
+    vertices = np.zeros(TAILLE)
+    labelVertices = []
+    edges = np.zeros(TAILLE)
+    labelEdges = []
+    compteur=-1
+    numero=0
+    file = open(fileName, "r")
+    for line in file:
+        a = line
+        b = a.split(" ")
+        if b[0]=="t":
+            compteur=compteur+1
+            if compteur>0:
+                noms.append(temptre)
+                nbV.append(len(labelVertices[compteur-1]))
+                nbE.append(len(labelEdges[compteur-1]))
+            labelVertices.append([])
+            labelEdges.append([])
+            val = b[2]
+            val = re.sub("\n","",val)
+            val = int(val)
+            numero = val
+            temptre=""
+        if b[0]=="v":
+            vertices[compteur]=vertices[compteur]+1
+            val = b[2]
+            val = re.sub("\n","",val)
+            val = int(val)
+            labelVertices[compteur].append(val)
+            temptre=temptre+line
+        if b[0]=="e":
+            edges[compteur]=edges[compteur]+1
+            num1 = int(b[1])
+            num2 = int(b[2])
+            val = b[3]
+            val = re.sub("\n","",val)
+            val = int(val)
+            labelEdges[compteur].append((num1,num2,val))
+            temptre=temptre+line
+        if b[0]=="x":
+            temp= []
+            #for j in range(1,len(b)-1):
+            for j in range(1,len(b)-1):
+                if not(b[j]=="#"):
+                    val = b[j]
+                    val = re.sub("\n","",val)
+                    val = int(val)
+                    temp.append(val)
+            numbers[numero]=temp  
+    noms.append(temptre)
+    nbV.append(len(labelVertices[compteur-1]))
+    nbE.append(len(labelEdges[compteur-1]))
+    graphes = []
+    for i in range(len(vertices)):
+        dicoNodes = {}
+        graphes.append(nx.Graph())
+        for j in range(int(vertices[i])):
+            #tempDictionnaireNodes = {"color":labelVertices[i][j]}
+            dicoNodes[j]=labelVertices[i][j]
+        for j in range(int(edges[i])):
+            graphes[i].add_edge(labelEdges[i][j][0],labelEdges[i][j][1],feature=labelEdges[i][j][2])
+        graphes[i].add_nodes_from([(node, {'feature':[attr]}) for (node, attr) in dicoNodes.items()])
     return graphes,numbers,noms
 
 def load_patterns(fileName,TAILLE):
@@ -419,6 +498,127 @@ from karateclub import Graph2Vec
 from grakel import graph_from_networkx
 from grakel.datasets import fetch_dataset
 from grakel.kernels import WeisfeilerLehman, VertexHistogram, WeisfeilerLehmanOptimalAssignment
+from stellargraph.mapper import PaddedGraphGenerator
+from stellargraph.layer import DeepGraphCNN
+from stellargraph import StellarGraph
+from tensorflow.keras import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dense, Conv1D, MaxPool1D, Dropout, Flatten
+from tensorflow.keras.losses import binary_crossentropy
+import tensorflow as tf
+
+import keras.backend as K
+
+def f1_score(y_true, y_pred):
+
+    # Count positive samples.
+    c1 = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    c2 = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    c3 = K.sum(K.round(K.clip(y_true, 0, 1)))
+
+    # If there are no true samples, fix the F1 score at 0.
+    if c3 == 0:
+        return 0.0
+
+    # How many selected items are relevant?
+    precision = c1 / c2
+
+    # How many relevant items are selected?
+    recall = c1 / c3
+
+    # Calculate f1_score
+    f1_score = 2 * (precision * recall) / (precision + recall)
+    return f1_score
+
+def modelGen(generator):
+    k = 35  # the number of rows for the output tensor
+    layer_sizes = [32, 32, 32, 1]
+
+    dgcnn_model = DeepGraphCNN(
+        layer_sizes=layer_sizes,
+        activations=["tanh", "tanh", "tanh", "tanh"],
+        k=k,
+        bias=False,
+        generator=generator,
+    )
+    x_inp, x_out = dgcnn_model.in_out_tensors()
+    x_out = Conv1D(filters=16, kernel_size=sum(layer_sizes), strides=sum(layer_sizes))(x_out)
+    x_out = MaxPool1D(pool_size=2)(x_out)
+
+    x_out = Conv1D(filters=32, kernel_size=5, strides=1)(x_out)
+
+    x_out = Flatten()(x_out)
+
+    #predictions= Dense(units=128, activation="relu")(x_out)
+
+    x_out = Dense(units=128, activation="relu")(x_out)
+    x_out = Dropout(rate=0.5)(x_out)
+
+    predictions = Dense(units=1, activation="sigmoid")(x_out)
+    model = Model(inputs=x_inp, outputs=predictions)
+
+    model.compile(
+    optimizer=Adam(lr=0.0001), loss=binary_crossentropy, metrics=["acc",f1_score])
+    return model
+
+from sklearn import model_selection
+def DGCNN(index,keep,graphs,labels,cv,results):
+    F1DGCNN = np.zeros(10)
+    stellarColl = []
+    lab=[]
+    for j in range(len(graphs)):
+        if j in keep:
+            stellarColl.append(StellarGraph(graphs[j],node_features="feature"))
+            lab.append(labels[j])
+    gen = PaddedGraphGenerator(graphs=stellarColl)
+    labelss = pd.get_dummies(copy.deepcopy(lab), drop_first=True)
+    i=-1
+    for train_index, test_index in cv.split(stellarColl,lab):
+        i=i+1
+        X_train=[]
+        X_test=[]
+        y_train=[]
+        y_test=[]
+        for l in train_index:
+            X_train.append(stellarColl[l])
+            y_train.append(labelss.iloc[l])
+        for l in test_index:
+            X_test.append(stellarColl[l])
+            y_test.append(labelss.iloc[l])
+        
+        train_gen = gen.flow(
+        list(train_index - 1),
+        targets=y_train,
+        batch_size=50,
+        symmetric_normalization=False,
+        )
+
+        valid_gen = gen.flow(
+        list(test_index - 1),
+        targets=y_test,
+        batch_size=1,
+        symmetric_normalization=False,
+        )
+    
+        test_gen = gen.flow(
+        list(test_index - 1),
+        targets=y_test,
+        batch_size=len(X_test),
+        symmetric_normalization=False,
+        )
+        
+        epochs = 10
+        model = modelGen(gen)
+        history = model.fit(train_gen, epochs=epochs, verbose=1, validation_data=valid_gen, shuffle=True)
+        test_metrics = model.evaluate(test_gen)
+        print("\nTest Set Metrics:")
+        F1DGCNN[i]=test_metrics[2]
+    results[index][9][1][0]=np.mean(F1DGCNN)
+    results[index][9][1][1]=np.std(F1DGCNN)   
+    return results
+    
+
+
 
 def Baselines(index,DATASET,Graphes,cv,labels,results):
     """ this function computes the baseline results for the graph classification task
@@ -517,7 +717,7 @@ import stellargraph as sg
 def Table2():
     """ this function computes the results of the table 1 of the paper
         results are saved in a csv file in the folder results"""
-    DATASETS = ["MUTAG"]
+    DATASETS = ["MUTAG","PTC","FOPPA"]
     Ks = {"MUTAG": 150, "NCI1": 3, "DD": 3, "PTC": 150, "FOPPA": 500}
     results = np.zeros((len(DATASETS),10,2,2))
     for DATASET in DATASETS:
@@ -536,6 +736,7 @@ def Table2():
         print("DATASET : "+str(arg))
 
         Graphes,useless_var,PatternsRed= load_graphs(FILEGRAPHS,GRAPHLENGTH)
+        DGCNN_graphs,XX,XX= load_graphs_DGCNN(FILEGRAPHS,GRAPHLENGTH)
         Subgraphs,id_graphs,noms = load_graphs(FILESUBGRAPHS,PATTERNLENGTH)
         xx,id_graphs_mono,occurences_mono = load_patterns(FILEMONOSET,PATTERNLENGTH)
         xx,id_graphs_iso,occurences_iso = load_patterns(FILEISOSET,PATTERNLENGTH)
@@ -567,6 +768,7 @@ def Table2():
         #keep only graphs which are in keep
         Graphs = [Graphes[i] for i in keep]
         results = Baselines(DATASETS.index(DATASET),DATASET,Graphs,cv,Y,results)
+        results = DGCNN(DATASETS.index(DATASET),keep,DGCNN_graphs,labels,cv,results)
         print(results)
     data = pd.DataFrame(index=range(len(results[0])),columns=DATASETS)
     for i in range(len(results[0])):

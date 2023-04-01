@@ -1,5 +1,9 @@
 #!/bin/bash 
 
-java -Xmx8192m -jar spmf.jar run GSPAN ../data/MUTAG/MUTAG_graph.txt ../data/MUTAG/MUTAG_pattern.txt 0.00001 8 true false true 
-java -Xmx8192m -jar spmf.jar run CGSPANSupport ../data/MUTAG/MUTAG_graph.txt ../data/MUTAG/MUTAG_CG.txt 0.00001 8 true false true 
-python3 ProcessingPatterns.py -d MUTAG
+name=$1
+input="../data/"$name"/"$name"_graph.txt"
+outputGSPAN="../data/"$name"/"$name"_pattern.txt"
+outputCGSPAN="../data/"$name"/"$name"_CG.txt"
+echo "$input"
+java -Xmx8192m -jar spmf.jar run GSPAN $input $outputGSPAN 0.1 10 true false true 
+#java -Xmx8192m -jar spmf.jar run CGSPANMNI $input $outputCGSPAN 1 1 true false true 
