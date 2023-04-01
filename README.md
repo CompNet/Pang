@@ -72,29 +72,45 @@ For the patterns output files, each pattern contains one more line than the grap
 
 ## Datasets
 The datasets used in the paper are available in the `data` folder. The following datasets are available:
-* `MUTAG` : MUTAG dataset, available [here](https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets).
-* `NCI1` : NCI1 dataset, available [here](https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets).
-* `PTC` : PTC dataset, available [here](https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets).
-* `DD` : DD dataset, available [here](https://ls11-www.cs.tu-dortmund.de/staff/morris/graphkerneldatasets).
+* `MUTAG` : MUTAG dataset, representing chemical compounds and their mutagenic properties [[D'91](#references)],
+* `NCI1` : NCI1 dataset, representing molecules and classified according to carcinogenicity [[W'06](#references)],
+* `PTC` : PTC dataset, representing molecules and classified according to carcinogenicity  [[T'03](#references)], 
+* `DD` : DD dataset, representing amino acids and their interactions [[D'03](#references)],
+
+Each of these datasets can be found [here](https://www.philippe-fournier-viger.com/spmf/index.php?link=datasets.php).
 * `FOPPA` : dataset extracted from FOPPA, a database of French public procurement notices [[P'22](#references)]. 
 # Dependencies
-Tested with `SPMF` version 2.54, and `python` version 3.8.0 with the following packages:
-* [`pandas`](https://pypi.org/project/pandas/): version 1.3.5
-* [`numpy`](https://pypi.org/project/numpy/): version 1.22.4
-* [`networkx`](https://pypi.org/project/numpy/): version 2.6.3
-* [`sklearn`](https://pypi.org/project/numpy/): version 0.0
-* [`matplotlib`](https://pypi.org/project/numpy/): version 3.6.0
-
+Tested with `SPMF` version 2.54, and `python` version 3.6.13 with the following packages:
+* [`pandas`](https://pypi.org/project/pandas/): version 1.1.5
+* [`numpy`](https://pypi.org/project/numpy/): version 1.19.5
+* [`networkx`](https://pypi.org/project/numpy/): version 2.5.1
+* [`sklearn`](https://pypi.org/project/numpy/): version 0.24.2
+* [`matplotlib`](https://pypi.org/project/numpy/): version 3.3.4
+* [`grakel`](https://pypi.org/project/numpy/): version 0.1.8
+* [`karateclub`](https://pypi.org/project/numpy/): version 1.3.3
+* [`stellargraph`](https://pypi.org/project/numpy/): version 1.2.1
 
 
 The VF2 and ISMAGS algortihms are included in the [`Networkx` library](https://networkx.org/)
 
 For the baselines:
-* The WL and WLOA algorithms are included in the Grakel library, available [here](https://ysig.github.io/GraKeL/0.1a8/benchmarks.html)
-* Graph2Vec is included in the karateclub library, available [here](https://karateclub.readthedocs.io/en/latest/)
-* DGCNN is included in the stellargraph library, available [here](https://stellargraph.readthedocs.io/en/stable/).
+* The WL and WLOA algorithms are included in the Grakel library, documentation available [here](https://ysig.github.io/GraKeL/0.1a8/benchmarks.html)
+* Graph2Vec is included in the karateclub library, documentation available [here](https://karateclub.readthedocs.io/en/latest/)
+* DGCNN is included in the stellargraph library, documentation available [here](https://stellargraph.readthedocs.io/en/stable/).
 * We use the implementation of CORK from Marisa Thoma. This implementation is available in the `CORKcpp.zip` archive.
 
 
 # References
 * **[P'22]** L. Potin, V. Labatut, R. Figueiredo, C. Largeron, P.-H. Morand. *FOPPA: A database of French Open Public Procurement Award notices*, Technical Report, Avignon University, 2022.  [⟨hal-03796734⟩](https://hal.archives-ouvertes.fr/hal-03796734)
+* **[D'91]** A.S. Debnath, R.L. Lopez, G. Debnath, A. Shusterman, C. Hansch. *Structure-
+activity relationship of mutagenic aromatic and heteroaromatic nitro compounds.
+correlation with molecular orbital energies and hydrophobicity*, Journal of Medic-
+inal Chemistry 34(2), 786–797, 1991.
+* **[W'06]** N.Wale, G. Karypis. *Comparison of descriptor spaces for chemical compound
+retrieval and classification*, 6th International Conference on Data Mining, pp.
+678–689, 2006.
+* **[T'03]** H . Toivonen, A. Srinivasan, R.D. King, S. Kramer, C. Helma.*Statistical eval-
+uation of the predictive toxicology challenge 2000-2001*, Bioinformatics 19(10),
+1183–1193, 2003.
+* **[D'03]** P.D. Dobson, A.J. Doig. *Distinguishing enzyme structures from non-enzymes
+without alignments*, Journal of Molecular Biology 330(4), 771–783 ,2003.
