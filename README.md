@@ -133,20 +133,24 @@ Tested with `SPMF` version 2.54, which implements gSpan [[Y'02](#references)] (t
 
 For the ECML PKDD assessment, we use the following algorithms for the sake of comparison:
 
-* The `WL` and `WLOA` algorithms are included in the `Grakel` library, documentation available [here](https://ysig.github.io/GraKeL/0.1a8/benchmarks.html)
-* `Graph2Vec` is included in the `karateclub` library, documentation available [here](https://karateclub.readthedocs.io/en/latest/)
-* `DGCNN` is included in the `stellargraph` library, documentation available [here](https://stellargraph.readthedocs.io/en/stable/).
-* We use the implementation of `CORK` from Marisa Thoma. This implementation is available in the `CORKcpp.zip` archive.
+* The `WL` [[S'11](#references)] and `WL_OA` [[K'16](#references)] algorithms are included in the `Grakel` library, documentation available [here](https://ysig.github.io/GraKeL/0.1a8/benchmarks.html)
+* `Graph2Vec` [[N'17](#references)] is included in the `karateclub` library, documentation available [here](https://karateclub.readthedocs.io/en/latest/)
+* `DGCNN` [[Z'18](#references)] is included in the `stellargraph` library, documentation available [here](https://stellargraph.readthedocs.io/en/stable/).
+* We use the implementation of `CORK` [[T'09](#references)] from Marisa Thoma. This implementation is available in the `CORKcpp.zip` archive.
 
 
 # References
+* **[C'04]** L. P. Cordella, P. Foggia, C. Sansone, M. Vento. *A (sub)graph isomorphism algorithm for matching large graphs*, IEEE Transactions on Pattern Analysis and Machine Intelligence, 26(10):1367-1372, 2004. DOI: [10.1109/tpami.2004.75](https://doi.org/10.1109/tpami.2004.75)
 * **[D'91]** A. S. Debnath, R. L. Lopez, G. Debnath, A. Shusterman, C. Hansch. *Structure-activity relationship of mutagenic aromatic and heteroaromatic nitro compounds. Correlation with molecular orbital energies and hydrophobicity*, Journal of Medicinal Chemistry 34(2):786–797, 1991. DOI: [10.1021/jm00106a046](https://doi.org/10.1021/jm00106a046)
 * **[D'03]** P. D. Dobson, A. J. Doig. *Distinguishing enzyme structures from non-enzymes without alignments*, Journal of Molecular Biology 330(4):771–783, 2003. DOI: [10.1016/S0022-2836(03)00628-4](https://doi.org/10.1016/S0022-2836(03)00628-4)
 * **[H'14']** M. Houbraken, S. Demeyer, T. Michoel, P. Audenaert, D. Colle, M. Pickavet. *The Index-Based Subgraph Matching Algorithm with General Symmetries (ISMAGS): Exploiting Symmetry for Faster Subgraph Enumeration*, PLoS ONE 9(5):e97896, 2014. DOI: [10.1371/journal.pone.0097896](https://doi.org/10.1371/journal.pone.0097896).
+* **[K'16]** N. M. Kriege, P. L. Giscard, R. Wilson. *On Valid Optimal Assignment Kernels and Applications to Graph Classification*, 30th International Conference on Neural Information Processing Systems, pp. 1623–1631, 2016. URL: [here](https://proceedings.neurips.cc/paper_files/paper/2016/hash/0efe32849d230d7f53049ddc4a4b0c60-Abstract.html)
+* **[N'17]** A. Narayanan, M. Chandramohan, R. Venkatesan, L. Chen, Y. Liu, S. Jaiswal. *graph2vec: Learning Distributed Representations of Graphs*, 13th International Workshop on Mining and Learning with Graphs, p. 21, 2017. URL: [here](https://arxiv.org/abs/1707.05005)
 * **[P'22]** L. Potin, V. Labatut, R. Figueiredo, C. Largeron, P.-H. Morand. *FOPPA: A database of French Open Public Procurement Award notices*, Technical Report, Avignon University, 2022.  [⟨hal-03796734⟩](https://hal.archives-ouvertes.fr/hal-03796734)
+* **[S'11]** N. Shervashidze, P. Schweitzer, E. J. van Leeuwen, K. Mehlhorn, K. M. Borgwardt. *Weisfeiler-Lehman Graph Kernels*, Journal of Machine Learning Research 12:2539–2561, 2011. URL: [here](https://dl.acm.org/citation.cfm?id=2078187)
 * **[S'21]** Z. Shaul, S. Naaz. *cgSpan: Closed Graph-Based Substructure Pattern Mining, IEEE International Conference on Big Data, pp. 4989-4998, 2021. DOI: [10.1109/bigdata52589.2021.9671995](https://doi.org/10.1109/bigdata52589.2021.9671995)
 * **[T'03]** H. Toivonen, A. Srinivasan, R. D. King, S. Kramer, C. Helma. *Statistical evaluation of the predictive toxicology challenge 2000-2001*, Bioinformatics 19(10):1183–1193, 2003. DOI: [10.1093/bioinformatics/btg130](https://doi.org/10.1093/bioinformatics/btg130)
+* **[T'09]** M. Thoma, H. Cheng, A. Gretton, J. Han, H.-P. Kriegel, A. Smola, S. Le, P. S. Yu, X. Yan, K. Borgwardt. *Near-optimal supervised feature selection among frequent subgraphs*, SIAM International Conference on Data Mining, pp. 1076-1087, 2009. DOI: [10.1137/1.9781611972795.92](http://doi.org/10.1137/1.9781611972795.92)
 * **[W'06]** N. Wale, G. Karypis. *Comparison of descriptor spaces for chemical compound retrieval and classification*, 6th International Conference on Data Mining, pp. 678–689, 2006. DOI: [10.1007/s10115-007-0103-5](https://doi.org/10.1007/s10115-007-0103-5)
 * **[Y'02]** X. Yan, J. Han. *gSpan: Graph-based substructure pattern mining*, IEEE International Conference on Data Mining, pp.721-724, 2002. DOI: [10.1109/ICDM.2002.1184038](https://doi.org/10.1109/ICDM.2002.1184038)
-* ** [C'04]** L. P. Cordella, P. Foggia, C. Sansone, M. Vento. *A (sub)graph isomorphism algorithm for matching large graphs*, IEEE Transactions on Pattern Analysis and Machine Intelligence, 26(10):1367-1372, 2004. DOI: [10.1109/tpami.2004.75](https://doi.org/10.1109/tpami.2004.75)
-* 
+* **[Z'18]** D. Zhang, J. Yin, X. Zhu, C. Zhang. *Network Representation Learning: A Survey*, IEEE Transactions on Big Data 6(1):3–28, 2018. DOI: [10.1109/tbdata.2018.2850013](http://doi.org/10.1109/tbdata.2018.2850013)
