@@ -41,7 +41,8 @@ Second, one of the dependencies, SPMF, is not a Python package, but rather a Jav
 
 Note that SPMF is available both as a JAR and as source code archive. However, the former does not contain all the features required by Pang, so one should use only the latter.
 
-In order to run the script that reproduces our ECML PKDD experiments, you also need to install CORK. This is done by unzipping the archive `CORKcpp.zip` in the `src` folder.
+In order to run the script that reproduces our ECML PKDD experiments, you also need to install CORK. This is done by unzipping the archive `CORKcpp.zip` in the `src` folder. The documentation for installing CORK is available on the Readme file in the `CORKcpp` folder.
+
 
 ## Data
 Third, you need to set up the data to which you want to apply Pang. This can be the dataset from our paper, in which you will need to unzip several archives, or your own data, in which case they need to be respect the appropriate format. In both cases, see cf. Section [Use](#use).
@@ -77,7 +78,7 @@ Then, run the appropriate script:
 3. Open the Python console.
 4. Run `EMCL.py`
 
-The script will compute the results of the experiments and save the results associated with Table 2, 5 and 6 of the paper, in the `results` folder.
+The script will compute the results of the experiments and save the results associated with Table 2,3, 5 and 6 of the paper, in the `results` folder.
 
 
 ## To Apply Pang to Other Data
@@ -110,7 +111,7 @@ Once the data are ready, you need to run a script to identify the patterns, and 
 3. Run `ProcessingPattern.py`with the option `-d XXX` in order to create the files `XXX_mono.txt` and `XXX_iso.txt`.
 4. Run `PANG.py`. 2 parameters are required:
     * `-d XXX` : the name of the dataset
-    * `-k k` : the number of patterns to consider. It can be a single value, or a list of values separated by commas.
+    * `-k k` : the number of patterns to consider in the PANG representations. User can provide a single value, or a list of values separated by commas.
 
 For each value of the parameter `k`, Pang will create a file `KResults.txt` containing the results of the classification and a file `KPatterns.txt` containing the patterns.
 
