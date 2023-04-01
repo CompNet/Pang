@@ -1,4 +1,0 @@
-Results for K = 50 
-Representation 0
-F1 score for class 0: 0.7722800976772883 +/- 0.040637412492257996
-F1 score for class 1: 0.7437712928360141 +/- 0.05395475412981085

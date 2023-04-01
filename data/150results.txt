@@ -1,4 +1,0 @@
-Results for K = 150 
-Representation 0
-F1 score for class 0: 0.8858878781646636 +/- 0.03773434912831046
-F1 score for class 1: 0.8770123062939357 +/- 0.04804639523669413

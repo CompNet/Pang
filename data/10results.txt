@@ -1,3 +1,0 @@
-Results for K = 10 
-Representation 0
-F1 score for class 0: [0.71886757 0.08163164] +/- [0.67548689 0.04311387]

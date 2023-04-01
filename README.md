@@ -31,7 +31,7 @@ SPMF is available in two versions:
 * a jar file that can be run from the command line. Actually, this version can be use with gSpan, but not with cgSpan.
 * a source code. The installation of this version is more complicated, but it allows to use cgSpan. You can find the instructions [here](https://www.philippe-fournier-viger.com/spmf/how_to_install.php).
 
-In order to use Pang, you need to unzip the datasets in each folder of the `data` folder.
+In order to use Pang, you need to unzip each dataset in its own folder in the `data` folder. 
 
 # Use
 We provide two scripts to use Pang:

@@ -1,4 +1,0 @@
-Results for K = 15793 
-Representation 0
-F1 score for class 0: 0.9643270024052345 +/- 0.021372705344888786
-F1 score for class 1: 0.9658469469877504 +/- 0.019622292639436514
