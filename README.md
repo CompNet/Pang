@@ -18,7 +18,7 @@ This repository is composed of the following elements:
   * `EMCL.py`: script that reproduces the experiments of our paper submitted to ECML PKDD.
   * `PANG.py`: script that implements the Pang method.
   * `ProcessingPattern.py`: script that computes the number of occurences and the set of induced patterns.
-  * `Pattern.sh`: **TODO (identifies the patterns with SPMF and counts them with `ProcessingPattern.py` ?).**
+  * `Pattern.sh`: script that computes the patterns of a dataset.
   * `CORKcpp.zip`: archive containing the CORK source code (used in `EMCL.py`) cf. Section [Installation](#installation).
 * `data`: folder containing the input data. Each subfolder corresponds to a distinct dataset, cf. Section [Datasets](#datasets).
 * `results`: files produced by the processing.
@@ -41,11 +41,10 @@ Second, one of the dependencies, SPMF, is not a Python package, but rather a Jav
 
 Note that SPMF is available both as a JAR and as source code archive. However, the former does not contain all the features required by Pang, so one should use only the latter.
 
-**TODO In order to run the script that reproduces our ECML PKDD experiments, you also need to install CORK.**
+In order to run the script that reproduces our ECML PKDD experiments, you also need to install CORK. This is done by unzipping the archive `CORKcpp.zip` in the `src` folder.
 
 ## Data
 Third, you need to set up the data to which you want to apply Pang. This can be the dataset from our paper, in which you will need to unzip several archives, or your own data, in which case they need to be respect the appropriate format. In both cases, see cf. Section [Use](#use).
-
 
 # Use
 We provide two scripts to use Pang:
@@ -100,9 +99,7 @@ For information, the files produced by our scripts to list the identified patter
 
 4. `x A B C A,B,C` : graphs containing the pattern
 
-The format of the file containing the graph labels is as follows:
-
-**TODO**
+The format of the file containing the graph labels is as follows: each line contains an unique integer, corresponding to the label of the graph in the same line in the graph file.
 
 ### Processing
 
@@ -111,9 +108,11 @@ Once the data are ready, you need to run a script to identify the patterns, and 
 1. Open the `Python` console.
 2. Run the script `Patterns.sh` in order to create the files `XXX_patterns.txt`.
 3. Run `ProcessingPattern.py`with the option `-d XXX` in order to create the files `XXX_mono.txt` and `XXX_iso.txt`.
-4. Run `PANG.py` with the option `-d XXX` in order to run Pang on the data `XXX`.
+4. Run `PANG.py`. 2 parameters are required:
+    * `-d XXX` : the name of the dataset
+    * `-k k` : the number of patterns to consider. It can be a single value, or a list of values separated by commas.
 
-For each value of the parameter `k` **TODO c'est quoi ce k ?**, Pang will create a file `KResults.txt` containing the results of the classification and a file `KPatterns.txt` containing the patterns.
+For each value of the parameter `k`, Pang will create a file `KResults.txt` containing the results of the classification and a file `KPatterns.txt` containing the patterns.
 
 
 # Dependencies
@@ -136,7 +135,7 @@ For the ECML PKDD assessment, we use the following algorithms for the sake of co
 * The `WL` and `WLOA` algorithms are included in the `Grakel` library, documentation available [here](https://ysig.github.io/GraKeL/0.1a8/benchmarks.html)
 * `Graph2Vec` is included in the `karateclub` library, documentation available [here](https://karateclub.readthedocs.io/en/latest/)
 * `DGCNN` is included in the `stellargraph` library, documentation available [here](https://stellargraph.readthedocs.io/en/stable/).
-* We use the implementation of `CORK` from Marisa Thoma. This implementation is available in the `CORKcpp.zip` archive.
+* We use the implementation of `CORK` from Marisa Thoma. This implementation is available in the `CORKcpp.zip` archive, from [here](http://www.dbs.ifi.lmu.de/~thoma/pub/sam2010/sam2010.zip)
 
 
 # References
