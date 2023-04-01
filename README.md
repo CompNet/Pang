@@ -142,7 +142,7 @@ For the ECML PKDD assessment, we use the following algorithms for the sake of co
 * The `WL` [[S'11](#references)] and `WL_OA` [[K'16](#references)] algorithms are included in the `Grakel` library, documentation available [here](https://ysig.github.io/GraKeL/0.1a8/benchmarks.html)
 * `Graph2Vec` [[N'17](#references)] is included in the `karateclub` library, documentation available [here](https://karateclub.readthedocs.io/en/latest/)
 * `DGCNN` [[Z'18](#references)] is included in the `stellargraph` library, documentation available [here](https://stellargraph.readthedocs.io/en/stable/).
-* We use the implementation of `CORK` [[T'09](#references)] by Marisa Thoma, which is available [here](??????????).
+* We use the implementation of `CORK` [[T'09](#references)] by Marisa Thoma, which is available [here](http://www.dbs.ifi.lmu.de/~thoma/pub/sam2010/sam2010.zip).
 
 
 # References
