@@ -127,7 +127,7 @@ Tested with `python` version 3.6.13 and the following packages:
 * [`karateclub`](https://pypi.org/project/numpy/): version 1.3.3
 * [`stellargraph`](https://pypi.org/project/numpy/): version 1.2.1
 
-The VF2 and ISMAGS algortihms are included in the [`Networkx` library](https://networkx.org/)
+The VF2 [[C'04](#references)] and ISMAGS [[H'14](#references)] algorithms are included in the [`Networkx` library](https://networkx.org/)
 
 Tested with `SPMF` version 2.54, which implements gSpan [[Y'02](#references)] (to mine frequent patterns) and cgSpan [[S'21](#references)] (closed frequent patterns).
 
@@ -140,10 +140,13 @@ For the ECML PKDD assessment, we use the following algorithms for the sake of co
 
 
 # References
-* **[D'91]** A. S. Debnath, R. L. Lopez, G. Debnath, A. Shusterman, C. Hansch. *Structure-activity relationship of mutagenic aromatic and heteroaromatic nitro compounds. Correlation with molecular orbital energies and hydrophobicity*, Journal of Medicinal Chemistry 34(2), 786–797, 1991. DOI: [10.1021/jm00106a046](https://doi.org/10.1021/jm00106a046)
-* **[D'03]** P. D. Dobson, A. J. Doig. *Distinguishing enzyme structures from non-enzymes without alignments*, Journal of Molecular Biology 330(4), 771–783 ,2003. DOI: [10.1016/S0022-2836(03)00628-4](https://doi.org/10.1016/S0022-2836(03)00628-4)
+* **[D'91]** A. S. Debnath, R. L. Lopez, G. Debnath, A. Shusterman, C. Hansch. *Structure-activity relationship of mutagenic aromatic and heteroaromatic nitro compounds. Correlation with molecular orbital energies and hydrophobicity*, Journal of Medicinal Chemistry 34(2):786–797, 1991. DOI: [10.1021/jm00106a046](https://doi.org/10.1021/jm00106a046)
+* **[D'03]** P. D. Dobson, A. J. Doig. *Distinguishing enzyme structures from non-enzymes without alignments*, Journal of Molecular Biology 330(4):771–783, 2003. DOI: [10.1016/S0022-2836(03)00628-4](https://doi.org/10.1016/S0022-2836(03)00628-4)
+* **[H'14']** M. Houbraken, S. Demeyer, T. Michoel, P. Audenaert, D. Colle, M. Pickavet. *The Index-Based Subgraph Matching Algorithm with General Symmetries (ISMAGS): Exploiting Symmetry for Faster Subgraph Enumeration*, PLoS ONE 9(5):e97896, 2014. DOI: [10.1371/journal.pone.0097896](https://doi.org/10.1371/journal.pone.0097896).
 * **[P'22]** L. Potin, V. Labatut, R. Figueiredo, C. Largeron, P.-H. Morand. *FOPPA: A database of French Open Public Procurement Award notices*, Technical Report, Avignon University, 2022.  [⟨hal-03796734⟩](https://hal.archives-ouvertes.fr/hal-03796734)
 * **[S'21]** Z. Shaul, S. Naaz. *cgSpan: Closed Graph-Based Substructure Pattern Mining, IEEE International Conference on Big Data, pp. 4989-4998, 2021. DOI: [10.1109/bigdata52589.2021.9671995](https://doi.org/10.1109/bigdata52589.2021.9671995)
-* **[T'03]** H. Toivonen, A. Srinivasan, R. D. King, S. Kramer, C. Helma. *Statistical evaluation of the predictive toxicology challenge 2000-2001*, Bioinformatics 19(10), 1183–1193, 2003. DOI: [10.1093/bioinformatics/btg130](https://doi.org/10.1093/bioinformatics/btg130)
+* **[T'03]** H. Toivonen, A. Srinivasan, R. D. King, S. Kramer, C. Helma. *Statistical evaluation of the predictive toxicology challenge 2000-2001*, Bioinformatics 19(10):1183–1193, 2003. DOI: [10.1093/bioinformatics/btg130](https://doi.org/10.1093/bioinformatics/btg130)
 * **[W'06]** N. Wale, G. Karypis. *Comparison of descriptor spaces for chemical compound retrieval and classification*, 6th International Conference on Data Mining, pp. 678–689, 2006. DOI: [10.1007/s10115-007-0103-5](https://doi.org/10.1007/s10115-007-0103-5)
 * **[Y'02]** X. Yan, J. Han. *gSpan: Graph-based substructure pattern mining*, IEEE International Conference on Data Mining, pp.721-724, 2002. DOI: [10.1109/ICDM.2002.1184038](https://doi.org/10.1109/ICDM.2002.1184038)
+* ** [C'04]** L. P. Cordella, P. Foggia, C. Sansone, M. Vento. *A (sub)graph isomorphism algorithm for matching large graphs*, IEEE Transactions on Pattern Analysis and Machine Intelligence, 26(10):1367-1372, 2004. DOI: [10.1109/tpami.2004.75](https://doi.org/10.1109/tpami.2004.75)
+* 
