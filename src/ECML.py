@@ -613,8 +613,8 @@ def DGCNN(index,keep,graphs,labels,cv,results):
         test_metrics = model.evaluate(test_gen)
         print("\nTest Set Metrics:")
         F1DGCNN[i]=test_metrics[2]
-    results[index][9][1][0]=np.mean(F1DGCNN)
-    results[index][9][1][1]=np.std(F1DGCNN)   
+    results[index][10][1][0]=np.mean(F1DGCNN)
+    results[index][10][1][1]=np.std(F1DGCNN)   
     return results
     
 
@@ -693,24 +693,26 @@ def Baselines(index,DATASET,Graphes,cv,labels,results):
     #first index: 0 for WL, 1 for WLOA, 2 for Graph2Vec, 3 for DGCNN
     #second index : the class
     #third index : 0 for the mean, 1 for the standard deviation
-    results[index][6][0][0]=np.mean(f0WL)
-    results[index][6][0][1]=np.std(f0WL)
-    results[index][6][1][0]=np.mean(f1WL)
-    results[index][6][1][1]=np.std(f1WL)
-    results[index][7][0][0]=np.mean(f0WLOA)
-    results[index][7][0][1]=np.std(f0WLOA)
-    results[index][7][1][0]=np.mean(F1WLOA)
-    results[index][7][1][1]=np.std(F1WLOA)
-    results[index][8][0][0]=np.mean(F0G2V)
-    results[index][8][0][1]=np.std(F0G2V)
-    results[index][8][1][0]=np.mean(F1G2V)
-    results[index][8][1][1]=np.std(F1G2V)
-    results[index][9][0][0]=0
-    results[index][9][0][1]=0
-    results[index][9][1][0]=0
-    results[index][9][1][1]=0
+    results[index][7][0][0]=np.mean(f0WL)
+    results[index][7][0][1]=np.std(f0WL)
+    results[index][7][1][0]=np.mean(f1WL)
+    results[index][7][1][1]=np.std(f1WL)
+    results[index][8][0][0]=np.mean(f0WLOA)
+    results[index][8][0][1]=np.std(f0WLOA)
+    results[index][8][1][0]=np.mean(F1WLOA)
+    results[index][8][1][1]=np.std(F1WLOA)
+    results[index][9][0][0]=np.mean(F0G2V)
+    results[index][9][0][1]=np.std(F0G2V)
+    results[index][9][1][0]=np.mean(F1G2V)
+    results[index][9][1][1]=np.std(F1G2V)
     return results
 
+def CORK(index,keep,GraphsCork,PatternCork,id_graphsCORK,labels,cv,results):
+    """ this function computes the results of the CORK baseline
+        results are saved in the results array"""
+    XCORK,Y = KVector(keep,len(PatternCork),np.ones(len(PatternCork)),id_graphsCORK,None,GRAPHLENGTH,labels)
+    results[index][6][0][0],results[index][6][0][1],results[index][6][1][0],results[index][6][1][1] = cross_validation(XCORK,Y,cv,SVC(C=100))
+    return results
 
 import stellargraph as sg
 
@@ -718,8 +720,8 @@ def Table2():
     """ this function computes the results of the table 1 of the paper
         results are saved in a csv file in the folder results"""
     DATASETS = ["MUTAG","PTC","FOPPA"]
-    Ks = {"MUTAG": 150, "NCI1": 3, "DD": 3, "PTC": 150, "FOPPA": 500}
-    results = np.zeros((len(DATASETS),10,2,2))
+    Ks = {"MUTAG": 150, "NCI1": 500, "DD": 500, "PTC": 150, "FOPPA": 500}
+    results = np.zeros((len(DATASETS),11,2,2))
     for DATASET in DATASETS:
         arg=DATASET
         folder="../data/"+str(arg)+"/"
@@ -730,14 +732,17 @@ def Table2():
         FILELABEL =folder+str(arg)+"_label.txt"
         FILECGGRAPH =folder+str(arg)+"_CG.txt"
         FILECGMONO =folder+str(arg)+"_CG_MONO.txt"
+        #FILECORK =folder+str(arg)+"_CORK.txt"
         GRAPHLENGTH=read_Sizegraph(FILEGRAPHS)
         PATTERNLENGTH=read_Sizegraph(FILESUBGRAPHS)
         CGLENGTH=read_Sizegraph(FILECGGRAPH)
+        #CORKLENGTH=read_Sizegraph(FILECORK)
         print("DATASET : "+str(arg))
 
         Graphes,useless_var,PatternsRed= load_graphs(FILEGRAPHS,GRAPHLENGTH)
         DGCNN_graphs,XX,XX= load_graphs_DGCNN(FILEGRAPHS,GRAPHLENGTH)
         Subgraphs,id_graphs,noms = load_graphs(FILESUBGRAPHS,PATTERNLENGTH)
+        SubgraphsCORK,id_graphsCORK,noms = load_graphs(FILESUBGRAPHS,PATTERNLENGTH)
         xx,id_graphs_mono,occurences_mono = load_patterns(FILEMONOSET,PATTERNLENGTH)
         xx,id_graphs_iso,occurences_iso = load_patterns(FILEISOSET,PATTERNLENGTH)
         cgSubgraphs,id_graphs_cg,noms = load_graphs(FILECGGRAPH,CGLENGTH)
@@ -767,6 +772,7 @@ def Table2():
             results[DATASETS.index(DATASET)][i][0][0],results[DATASETS.index(DATASET)][i][0][1],results[DATASETS.index(DATASET)][i][1][0],results[DATASETS.index(DATASET)][i][1][1] = cross_validation(representations[i][0],representations[i][1],cv,SVC(C=100))
         #keep only graphs which are in keep
         Graphs = [Graphes[i] for i in keep]
+        #results = CORK(DATASETS.index(DATASET),keep,Graphes,SubgraphsCORK,id_graphsCORK,labels,cv,results)
         results = Baselines(DATASETS.index(DATASET),DATASET,Graphs,cv,Y,results)
         results = DGCNN(DATASETS.index(DATASET),keep,DGCNN_graphs,labels,cv,results)
         print(results)
@@ -776,14 +782,142 @@ def Table2():
             data[j][i]=str(results[DATASETS.index(j)][i][1][0])[0:4]+" ("+str(results[DATASETS.index(j)][i][1][1])[0:4]+")"
     data.to_csv("../results/Table2.csv",index=False)
           
+def Table3():
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import StandardScaler 
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.metrics import classification_report, confusion_matrix
+    import pandas as pd 
+    from os import walk
+    import numpy as np
+
+
+    columns = ['correctionsNb', 'cancelled', 'onBehalf', 'jointProcurement',
+        'fraAgreement','accelerated',
+        'outOfDirectives','subContracted',
+        'gpa', 'multipleCae', 'typeOfContract', 'topType', 'renewal',
+        'contractDuration', 'publicityDuration','tenderNumber']
+
+    final=pd.read_csv("../data/FOPPA/FOPPAtabular.csv")
+    final=final.assign(Class=0)
+    for i in range(len(final)):
+        if final["tenderNumber"][i]<2:
+            final["Class"][i]=1
+        else:
+            final["Class"][i]=0
+        final["tenderNumber"][i]=0
+    y = np.array(final["Class"])
+    import copy
+    dataset = copy.deepcopy(final)
+    dataset=dataset[columns]
+
+    # Use head() function to return the first 5 rows: 
+    dataset.head() 
+    # Assign values to the X and y variables:
+    X = dataset.iloc[:, :-1].values
+
+    # Split dataset into random train and test subsets:
+
+    # Standardize features by removing mean and scaling to unit variance:
+    """
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test) 
+    """
+    from sklearn.preprocessing import OneHotEncoder
+
+    from sklearn import preprocessing
+    enc = preprocessing.OneHotEncoder()
+    from sklearn.impute import SimpleImputer
+    # 2. FIT
+    imp = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
+    imp = imp.fit(X)
+    X = imp.transform(X)
+    enc.fit(X)
+
+    # 3. Transform
+    X = enc.transform(X).toarray()
+    print(X)
+    # Use the KNN classifier to fit data:
+    from sklearn.ensemble import RandomForestClassifier
+
+    from imblearn.under_sampling import RandomUnderSampler
+    rus = RandomUnderSampler(random_state=42, replacement=True)# fit predictor and target variable
+    x_rus, y_rus = rus.fit_resample(X, y)
+    from collections import Counter
+    print('original dataset shape:', Counter(y))
+    print('Resample dataset shape', Counter(y_rus))
+
+
+    #create 10-K StratifiedKFold
+    from sklearn.model_selection import StratifiedKFold
+    from sklearn.svm import SVC
+    cv = StratifiedKFold(n_splits=10, random_state=42, shuffle=True)
+    index={}
+    for train_index, test_index in cv.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        classifier = SVC(kernel='linear', C=1, random_state=0)
+        classifier.fit(X_train, y_train) 
+        y_predict = classifier.predict(X_test)
+        # in the index dictionnary stock each prediction :
+        # key = index of the test set
+        # value = prediction
+        for i in range(len(test_index)):
+            index[test_index[i]]=y_predict[i]
+        
+    #create a new column in the dataset with the prediction
+    final["Prediction"]=0
+    #for each line in the dataset, we stock the prediction in the new column
+    for i in range(len(final)):
+        final["Prediction"][i]=index[i]
+        
+    #create a new column in the dataset with the GroupedPrediction
+    final["GroupedPrediction"]=0
+    prediction = {}
+    #for each value of the column "AgentNumber, we sum the number of prediction for each agent
+    for i in range(len(final)):
+        #stock all the line with the same AgentNumber
+        lines = final["AgentNumber"]==i
+        Agent = final[final["AgentNumber"]==i]
+        #compute sum of prediction in Agent
+        prediction[i] = Agent["Prediction"].sum()
+        #replace the value of GroupedPrediction by the sum of prediction for each line
+
+    for i in range(len(final)):
+        final["GroupedPrediction"][i]=prediction[final["AgentNumber"][i]]
+        
+    # compute F score of each class between the column GroupedPrediction and the column Class
+
+    #for each value of AgentNumber
+    # keep GroupedPrediction and Class
+    #since for each agent with the same AgentNumber, 
+    #these two columns have the same value, we can keep only one line
+    numb = final["AgentNumber"].unique()
+    maxNum = max(numb)
+    agN = 0
+    GP=[]
+    prediClass=[]
+    for i in range(maxNum+1):
+        ds = final[final["AgentNumber"]==i]
+        ds=ds.reset_index(drop=True)
+        GP.append(ds["GroupedPrediction"].iloc[0])
+        prediClass.append(ds["Class"].iloc[0])
+    GP = np.array(GP)
+    prediClass = np.array(prediClass)
+
+    from sklearn.metrics import f1_score
+    a=f1_score(prediClass, GP, average=None)[0]
+    b=f1_score(prediClass, GP, average=None)[1]
+    data = pd.DataFrame(index=range(0,1),columns=["Method","F1_score0","F1_score1"])
+    data["Method"][0] = "Tabulard data"
+    data["F1_score0"][0] = str(a)[0:4]
+    data["F1_score1"][0] = str(b)[0:4]
+    data.to_csv("../results/Table3.csv",index=False)
     
-        
-        
-        
-        
-        
-
-
+    
 
 def Table5(Ks,keep,labels,id_graphs_mono,id_graphs_iso,id_graphs_cg,occurences_mono,occurences_iso,occurences_cg,LENGTHPATTERN,LENGTHGRAPHS,cv):
     """ this function computes the results of the table 5 of the paper
@@ -873,3 +1007,4 @@ if __name__ == '__main__':
     table5 = Table5([10,50,100,150,15793],keep,labels,id_graphs_mono,id_graphs_iso,id_graphs_cg,occurences_mono,occurences_iso,occurences_cg_mono,PATTERNLENGTH,GRAPHLENGTH,cv)
     print("Computing results for Table 6")
     table5 = Table6([100],keep,labels,id_graphs_mono,id_graphs_iso,id_graphs_cg,occurences_mono,occurences_iso,occurences_cg_mono,PATTERNLENGTH,GRAPHLENGTH,CGLENGTH,cv)
+    Table3()
