@@ -9,6 +9,12 @@ Pang is free software: you can redistribute it and/or modify it under the terms 
 # Description
 Pang is an algorithm which represents and classifies a collection of graphs according to their frequent patterns (subgraphs).
 
+**Content**
+* [Organization](#organization)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Dependencies](#dependencies)
+* [References](#references)
 
 # Organization
 This repository is composed of the following elements:
@@ -44,10 +50,10 @@ Note that SPMF is available both as a JAR and as source code archive. However, t
 **TODO In order to run the script that reproduces our ECML PKDD experiments, you also need to install CORK.**
 
 ## Data
-Third, you need to set up the data to which you want to apply Pang. This can be the dataset from our paper, in which you will need to unzip several archives, or your own data, in which case they need to be respect the appropriate format. In both cases, see cf. Section [Use](#use).
+Third, you need to set up the data to which you want to apply Pang. This can be the dataset from our paper, in which you will need to unzip several archives, or your own data, in which case they need to be respect the appropriate format. In both cases, see cf. Section [Usage](#usage).
 
 
-# Use
+# Usage
 We provide two scripts to use Pang:
 
 * `ECML.py`: reproduces the experiments described in our paper submitted to ECML PKDD.
