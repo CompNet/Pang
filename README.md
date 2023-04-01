@@ -25,7 +25,7 @@ This repository is composed of the following elements:
   * `PANG.py`: script that implements the Pang method.
   * `ProcessingPattern.py`: script that computes the number of occurences and the set of induced patterns.
   * `Pattern.sh`: script that computes the patterns of a dataset.
-  * `CORKcpp.zip`: archive containing the CORK source code (used in `EMCL.py`) cf. Section [Installation](#installation).
+  * `CORKcpp.zip`: archive containing the CORK source code (used in `EMCL.py`), cf. Section [Installation](#installation).
 * `data`: folder containing the input data. Each subfolder corresponds to a distinct dataset, cf. Section [Datasets](#datasets).
 * `results`: files produced by the processing.
 
@@ -47,7 +47,7 @@ Second, one of the dependencies, SPMF, is not a Python package, but rather a Jav
 
 Note that SPMF is available both as a JAR and as source code archive. However, the former does not contain all the features required by Pang, so one should use only the latter.
 
-In order to run the script that reproduces our ECML PKDD experiments, you also need to install CORK. This is done by unzipping the archive `CORKcpp.zip` in the `src` folder. The documentation for installing CORK is available on the Readme file in the `CORKcpp` folder.
+In order to run the script that reproduces our ECML PKDD experiments, you also need to install CORK. This is done by unzipping the archive `CORKcpp.zip` in the `src` folder. File `Readme` in this archive contains the instruction for compiling the C++ source code.
 
 
 ## Data
@@ -115,9 +115,9 @@ Once the data are ready, you need to run a script to identify the patterns, and 
 1. Open the `Python` console.
 2. Run the script `Patterns.sh` in order to create the files `XXX_patterns.txt`.
 3. Run `ProcessingPattern.py`with the option `-d XXX` in order to create the files `XXX_mono.txt` and `XXX_iso.txt`.
-4. Run `PANG.py`. 2 parameters are required:
-    * `-d XXX` : the name of the dataset
-    * `-k k` : the number of patterns to consider in the PANG representations. User can provide a single value, or a list of values separated by commas.
+4. Run `PANG.py`, specifying both following parameters:
+    * `-d XXX`: name of the dataset
+    * `-k k`: number of patterns to consider in the PANG representations. User can provide a single value, or a list of values separated by commas.
 
 For each value of the parameter `k`, Pang will create a file `KResults.txt` containing the results of the classification and a file `KPatterns.txt` containing the patterns.
 
@@ -142,7 +142,7 @@ For the ECML PKDD assessment, we use the following algorithms for the sake of co
 * The `WL` [[S'11](#references)] and `WL_OA` [[K'16](#references)] algorithms are included in the `Grakel` library, documentation available [here](https://ysig.github.io/GraKeL/0.1a8/benchmarks.html)
 * `Graph2Vec` [[N'17](#references)] is included in the `karateclub` library, documentation available [here](https://karateclub.readthedocs.io/en/latest/)
 * `DGCNN` [[Z'18](#references)] is included in the `stellargraph` library, documentation available [here](https://stellargraph.readthedocs.io/en/stable/).
-* We use the implementation of `CORK` [[T'09](#references)] from Marisa Thoma. This implementation is available in the `CORKcpp.zip` archive.
+* We use the implementation of `CORK` [[T'09](#references)] by Marisa Thoma, which is available [here](??????????).
 
 
 # References
