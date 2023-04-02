@@ -84,7 +84,7 @@ Then, run the appropriate script:
 3. Open the Python console.
 4. Run `EMCL.py`
 
-The script will compute the results of the experiments and save the results associated with Table 2,3, 5 and 6 of the paper, in the `results` folder.
+The script will compute the results of the experiments and save the results associated with Table 2, 4, 5 and 6 of the paper, in the `results` folder.
 
 
 ## To Apply Pang to Other Data

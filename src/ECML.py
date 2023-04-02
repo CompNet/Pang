@@ -46,6 +46,76 @@ def read_Sizegraph(fileName):
             nbGraph=nbGraph+1
     return nbGraph
 
+
+def load_graphs_CORK(fileName,TAILLE):
+    numbers = []
+    noms = []
+    for i in range(TAILLE):
+        numbers.append([])
+    ## Variables de stockage
+    vertices = np.zeros(TAILLE)
+    labelVertices = []
+    edges = np.zeros(TAILLE)
+    labelEdges = []
+    compteur=-1
+    numero=0
+    file = open(fileName, "r")
+    for line in file:
+        a = line
+        b = a.split(" ")
+        if b[0]=="t":
+            compteur=compteur+1
+            if compteur>0:
+                noms.append(temptre)
+            labelVertices.append([])
+            labelEdges.append([])
+            val = b[2]
+            val = re.sub("\n","",val)
+            val = int(val)
+            numero = val
+            temptre=""
+        if b[0]=="v":
+            vertices[compteur]=vertices[compteur]+1
+            val = b[2]
+            val = re.sub("\n","",val)
+            val = int(val)
+            labelVertices[compteur].append(val)
+            temptre=temptre+line
+        if b[0]=="e":
+            edges[compteur]=edges[compteur]+1
+            num1 = int(b[1])
+            num2 = int(b[2])
+            val = b[3]
+            val = re.sub("\n","",val)
+            val = int(val)
+            labelEdges[compteur].append((num1,num2,val))
+            temptre=temptre+line
+        if b[0]=="":
+            temp= []
+            #for j in range(1,len(b)-1):
+            for j in range(1,len(b)):
+                val = b[j]
+                val = re.sub("\n","",val)
+                val = re.sub("{","",val)
+                val = re.sub("}","",val)
+                val=val.split(":")[0]
+                val = int(val)
+                temp.append(val)
+            numbers[numero]=temp  
+    noms.append(temptre)
+    graphes = []
+    for i in range(len(vertices)):
+        dicoNodes = {}
+        graphes.append(nx.Graph())
+        for j in range(int(vertices[i])):
+            #tempDictionnaireNodes = {"color":labelVertices[i][j]}
+            dicoNodes[j]=labelVertices[i][j]
+        for j in range(int(edges[i])):
+            graphes[i].add_edge(labelEdges[i][j][0],labelEdges[i][j][1],color=labelEdges[i][j][2])
+        graphes[i].add_nodes_from([(node, {'color': attr}) for (node, attr) in dicoNodes.items()])
+    return graphes,numbers,noms
+
+
 def load_graphs(fileName,TAILLE):
     """Load graphs from a file.
     args: fileName (string) : the name of the file)
@@ -309,7 +379,7 @@ def computeScoreMono(keep,labels,id_graphs,TAILLEPATTERN):
     for i in range(len(diffDelta)):
         if len(id_graphs[i])>0:
                 for j in range(len(id_graphs[i])):
-                    if j in keep:
+                    if id_graphs[i][j] in keep:
                             aa=id_graphs[i][j]
                             if labels[aa]==0:
                                         diffDelta[i]=diffDelta[i]+1
@@ -342,7 +412,7 @@ def computeScoreOccurences(keep,labels,id_graphs,occurences,TAILLEPATTERN):
     for i in range(len(diffDelta)):
         if len(id_graphs[i])>0:
                 for j in range(len(id_graphs[i])):
-                    if j in keep:
+                    if id_graphs[i][j] in keep:
                         if labels[id_graphs[i][j]]==0:
                                 diffDelta[i]=diffDelta[i]+occurences[i][j]
                                 tailleNonRed[i]=tailleNonRed[i]+occurences[i][j]
@@ -384,19 +454,23 @@ def KVector(keep,K,diff,id_graphs,numberoccurences,LENGTHGRAPH,labels):
         Output : X (list of list of int) : the vectorial representation of the graphs
         Y (list of int) : the list of labels of the graphs""" 
     keepPatterns = []
-    for i in range(K):
-        if sum(diff)==0:
-            break
-        bestScore = np.max(diff)
-        bestPattern = np.argmax(diff)
-        keepPatterns.append(bestPattern)
-        diff[bestPattern]=0
+    if K>len(diff)-2:
+        for i in range(len(diff)):
+            keepPatterns.append(i)
+    else:
+        for i in range(K):
+            if sum(diff)==0:
+                break
+            bestScore = np.max(diff)
+            bestPattern = np.argmax(diff)
+            keepPatterns.append(bestPattern)
+            diff[bestPattern]=0
     vectorialRep = []
     newLabels = []
     for j in range(LENGTHGRAPH):#330
             vectorialRep.append([])
             for k in keepPatterns:
-                if j in keep and j in id_graphs[k]:
+                if j in id_graphs[k]:
                     for t in range(len(id_graphs[k])):
                         if id_graphs[k][t]==j:
                             if numberoccurences==None:
@@ -472,7 +546,6 @@ def cross_validation(X,Y,cv,classifier):
     F1_score0_std = np.std(F1_score0)
     F1_score1_mean = np.mean(F1_score1)
     F1_score1_std = np.std(F1_score1)
-    print(F1_score1_mean)
     #return the mean and standard deviation of the F1 score of each class
     return F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std
 
@@ -611,7 +684,6 @@ def DGCNN(index,keep,graphs,labels,cv,results):
         model = modelGen(gen)
         history = model.fit(train_gen, epochs=epochs, verbose=1, validation_data=valid_gen, shuffle=True)
         test_metrics = model.evaluate(test_gen)
-        print("\nTest Set Metrics:")
         F1DGCNN[i]=test_metrics[2]
     results[index][10][1][0]=np.mean(F1DGCNN)
     results[index][10][1][1]=np.std(F1DGCNN)   
@@ -623,8 +695,8 @@ def DGCNN(index,keep,graphs,labels,cv,results):
 def Baselines(index,DATASET,Graphes,cv,labels,results):
     """ this function computes the baseline results for the graph classification task
         baselines are : WL, WLOA, Graph2Vec, DGCNN.""" 
-    dicoC = {"MUTAG":1000,"NCI1":100,"NCI109":1,"PTC":100,"DD":1,"FOPPA":100}
-    model=Graph2Vec(attributed=True,epochs=1000)
+    dicoC = {"MUTAG": 100, "NCI1": 1000, "PTC":0.1, "FOPPA": 10000, "DD": 10000}
+    model=Graph2Vec(dimensions=128,attributed=True,epochs=500)
     fitGraph = copy.deepcopy(Graphes)
     model.fit(fitGraph)
     GraphesB=model.get_embedding()  
@@ -707,11 +779,11 @@ def Baselines(index,DATASET,Graphes,cv,labels,results):
     results[index][9][1][1]=np.std(F1G2V)
     return results
 
-def CORK(index,keep,GraphsCork,PatternCork,id_graphsCORK,labels,cv,results):
+def CORK(index,keep,GraphsCork,PatternCork,id_graphsCORK,labels,cv,results,cs):
     """ this function computes the results of the CORK baseline
         results are saved in the results array"""
-    XCORK,Y = KVector(keep,len(PatternCork),np.ones(len(PatternCork)),id_graphsCORK,None,GRAPHLENGTH,labels)
-    results[index][6][0][0],results[index][6][0][1],results[index][6][1][0],results[index][6][1][1] = cross_validation(XCORK,Y,cv,SVC(C=100))
+    XCORK,Y = KVector(keep,len(PatternCork),np.ones(len(PatternCork)),id_graphsCORK,None,len(GraphsCork),labels)
+    results[index][6][0][0],results[index][6][0][1],results[index][6][1][0],results[index][6][1][1] = cross_validation(XCORK,Y,cv,SVC(C=cs))
     return results
 
 import stellargraph as sg
@@ -719,8 +791,9 @@ import stellargraph as sg
 def Table2():
     """ this function computes the results of the table 1 of the paper
         results are saved in a csv file in the folder results"""
-    DATASETS = ["MUTAG","PTC","FOPPA"]
-    Ks = {"MUTAG": 150, "NCI1": 500, "DD": 500, "PTC": 150, "FOPPA": 500}
+    DATASETS = ["PTC","FOPPA","MUTAG","DD","NCI1"]
+    Ks = {"MUTAG": 100, "NCI1": 1000, "PTC": 100, "FOPPA": 1000, "DD": 500}
+    Cs = {"MUTAG": 100, "NCI1": 1000, "PTC": 0.1, "FOPPA": 10000, "DD": 1}
     results = np.zeros((len(DATASETS),11,2,2))
     for DATASET in DATASETS:
         arg=DATASET
@@ -731,22 +804,24 @@ def Table2():
         FILEISOSET=folder+str(arg)+"_iso.txt"
         FILELABEL =folder+str(arg)+"_label.txt"
         FILECGGRAPH =folder+str(arg)+"_CG.txt"
-        FILECGMONO =folder+str(arg)+"_CG_MONO.txt"
-        #FILECORK =folder+str(arg)+"_CORK.txt"
+        FILECORK =folder+str(arg)+"_CORK.txt"
         GRAPHLENGTH=read_Sizegraph(FILEGRAPHS)
         PATTERNLENGTH=read_Sizegraph(FILESUBGRAPHS)
         CGLENGTH=read_Sizegraph(FILECGGRAPH)
-        #CORKLENGTH=read_Sizegraph(FILECORK)
+        if arg!="DD":
+            FILECGMONO =folder+str(arg)+"_CG_MONO.txt"
+        CORKLENGTH=read_Sizegraph(FILECORK)
         print("DATASET : "+str(arg))
 
         Graphes,useless_var,PatternsRed= load_graphs(FILEGRAPHS,GRAPHLENGTH)
         DGCNN_graphs,XX,XX= load_graphs_DGCNN(FILEGRAPHS,GRAPHLENGTH)
         Subgraphs,id_graphs,noms = load_graphs(FILESUBGRAPHS,PATTERNLENGTH)
-        SubgraphsCORK,id_graphsCORK,noms = load_graphs(FILESUBGRAPHS,PATTERNLENGTH)
+        SubgraphsCORK,id_graphsCORK,noms = load_graphs_CORK(FILECORK,PATTERNLENGTH)
         xx,id_graphs_mono,occurences_mono = load_patterns(FILEMONOSET,PATTERNLENGTH)
         xx,id_graphs_iso,occurences_iso = load_patterns(FILEISOSET,PATTERNLENGTH)
         cgSubgraphs,id_graphs_cg,noms = load_graphs(FILECGGRAPH,CGLENGTH)
-        xx,id_cg_mono,occurences_cg_mono = load_patterns(FILECGMONO,CGLENGTH)
+        if arg!="DD":
+            xx,id_cg_mono,occurences_cg_mono = load_patterns(FILECGMONO,CGLENGTH)
         
         
         labels = readLabels(FILELABEL)
@@ -757,32 +832,40 @@ def Table2():
         scoresIndBin = computeScoreMono(keep,labels,id_graphs_iso,PATTERNLENGTH)
         scoresIndOcc = computeScoreOccurences(keep,labels,id_graphs_iso,occurences_iso,PATTERNLENGTH)
         scoresCloBin = computeScoreMono(keep,labels,id_graphs_cg,CGLENGTH)
-        scoresCloOcc = computeScoreOccurences(keep,labels,id_graphs_cg,occurences_cg_mono,CGLENGTH)
+        scoresCloOcc = computeScoreMono(keep,labels,id_graphs_cg,CGLENGTH)
+        if DATASET != "DD":
+            scoresCloOcc = computeScoreOccurences(keep,labels,id_graphs_cg,occurences_cg_mono,CGLENGTH)
         X_GenBin,Y = KVector(keep,Ks[DATASET],scoresGenBin,id_graphs_mono,None,GRAPHLENGTH,labels)
         X_GenOcc,Y = KVector(keep,Ks[DATASET],scoresGenOcc,id_graphs_mono,occurences_mono,GRAPHLENGTH,labels)
         X_IndBin,Y = KVector(keep,Ks[DATASET],scoresIndBin,id_graphs_iso,None,GRAPHLENGTH,labels)
         X_IndOcc,Y = KVector(keep,Ks[DATASET],scoresIndOcc,id_graphs_iso,occurences_iso,GRAPHLENGTH,labels)
         X_CloBin,Y = KVector(keep,Ks[DATASET],copy.deepcopy(scoresCloBin),id_graphs_cg,None,GRAPHLENGTH,labels)
-        X_CloOcc,Y = KVector(keep,Ks[DATASET],copy.deepcopy(scoresCloOcc),id_graphs_cg,occurences_cg_mono,GRAPHLENGTH,labels) 
-        representations = [[X_GenBin,Y],[X_GenOcc,Y],[X_IndBin,Y],[X_IndOcc,Y],[X_CloBin,Y],[X_CloOcc,Y]]
+        X_CloOcc=0
+        if DATASET != "DD":
+            X_CloOcc,Y = KVector(keep,Ks[DATASET],copy.deepcopy(scoresCloOcc),id_graphs_cg,occurences_cg_mono,GRAPHLENGTH,labels) 
+        if DATASET != "DD":
+            representations = [[X_GenBin,Y],[X_GenOcc,Y],[X_IndBin,Y],[X_IndOcc,Y],[X_CloBin,Y],[X_CloOcc,Y]]
+        else:
+            representations = [[X_GenBin,Y],[X_GenOcc,Y],[X_IndBin,Y],[X_IndOcc,Y],[X_CloBin,Y]]
         for i in range(len(representations)):
             #fill in results for :
             # first index : dataset
             #second index : representation
-            results[DATASETS.index(DATASET)][i][0][0],results[DATASETS.index(DATASET)][i][0][1],results[DATASETS.index(DATASET)][i][1][0],results[DATASETS.index(DATASET)][i][1][1] = cross_validation(representations[i][0],representations[i][1],cv,SVC(C=100))
+            results[DATASETS.index(DATASET)][i][0][0],results[DATASETS.index(DATASET)][i][0][1],results[DATASETS.index(DATASET)][i][1][0],results[DATASETS.index(DATASET)][i][1][1] = cross_validation(representations[i][0],representations[i][1],cv,SVC(Cs[DATASET]))
         #keep only graphs which are in keep
         Graphs = [Graphes[i] for i in keep]
-        #results = CORK(DATASETS.index(DATASET),keep,Graphes,SubgraphsCORK,id_graphsCORK,labels,cv,results)
-        results = Baselines(DATASETS.index(DATASET),DATASET,Graphs,cv,Y,results)
-        results = DGCNN(DATASETS.index(DATASET),keep,DGCNN_graphs,labels,cv,results)
-        print(results)
-    data = pd.DataFrame(index=range(len(results[0])),columns=DATASETS)
-    for i in range(len(results[0])):
-        for j in DATASETS:
-            data[j][i]=str(results[DATASETS.index(j)][i][1][0])[0:4]+" ("+str(results[DATASETS.index(j)][i][1][1])[0:4]+")"
-    data.to_csv("../results/Table2.csv",index=False)
+        results = CORK(DATASETS.index(DATASET),keep,Graphes,SubgraphsCORK,id_graphsCORK,labels,cv,results,Cs[DATASET])
+        #results = Baselines(DATASETS.index(DATASET),DATASET,Graphs,cv,Y,results)
+        #results = DGCNN(DATASETS.index(DATASET),keep,DGCNN_graphs,labels,cv,results) 
+        data = pd.DataFrame(index=range(len(results[0])),columns=["Representation"]+DATASETS)
+        nameMethod = ["GenBin","GenOcc","IndBin","IndOcc","CloBin","CloOcc","CORK","WL","WLOA","G2V","DGCNN"]
+        for i in range(len(results[0])):
+            data["Representation"][i]=nameMethod[i]
+            for j in DATASETS:
+                data[j][i]=str(results[DATASETS.index(j)][i][1][0])[0:4]+" ("+str(results[DATASETS.index(j)][i][1][1])[0:4]+")"
+        data.to_csv("../results/Table2.csv",index=False)
           
-def Table3():
+def Table4():
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler 
     from sklearn.neighbors import KNeighborsClassifier
@@ -798,19 +881,21 @@ def Table3():
         'gpa', 'multipleCae', 'typeOfContract', 'topType', 'renewal',
         'contractDuration', 'publicityDuration','tenderNumber']
 
-    final=pd.read_csv("../data/FOPPA/FOPPAtabular.csv")
+    final=pd.read_csv("../data/FOPPA/FOPPATabular.csv")
+    import copy
+
     final=final.assign(Class=0)
     for i in range(len(final)):
-        if final["tenderNumber"][i]<2:
+        if final["tenderNumber"][i]>1:
+            final["Class"][i]=0
+        elif final["tenderNumber"][i]==1:
             final["Class"][i]=1
         else:
             final["Class"][i]=0
         final["tenderNumber"][i]=0
     y = np.array(final["Class"])
-    import copy
     dataset = copy.deepcopy(final)
     dataset=dataset[columns]
-
     # Use head() function to return the first 5 rows: 
     dataset.head() 
     # Assign values to the X and y variables:
@@ -819,13 +904,9 @@ def Table3():
     # Split dataset into random train and test subsets:
 
     # Standardize features by removing mean and scaling to unit variance:
-    """
-    scaler = StandardScaler()
-    scaler.fit(X_train)
 
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test) 
-    """
+    F11=[]
+    F00=[]
     from sklearn.preprocessing import OneHotEncoder
 
     from sklearn import preprocessing
@@ -839,83 +920,95 @@ def Table3():
 
     # 3. Transform
     X = enc.transform(X).toarray()
-    print(X)
     # Use the KNN classifier to fit data:
     from sklearn.ensemble import RandomForestClassifier
-
+    G = copy.deepcopy(X)
     from imblearn.under_sampling import RandomUnderSampler
-    rus = RandomUnderSampler(random_state=42, replacement=True)# fit predictor and target variable
-    x_rus, y_rus = rus.fit_resample(X, y)
-    from collections import Counter
-    print('original dataset shape:', Counter(y))
-    print('Resample dataset shape', Counter(y_rus))
-
 
     #create 10-K StratifiedKFold
     from sklearn.model_selection import StratifiedKFold
     from sklearn.svm import SVC
-    cv = StratifiedKFold(n_splits=10, random_state=42, shuffle=True)
-    index={}
+    cv = StratifiedKFold(n_splits=3, random_state=1, shuffle=True)
     for train_index, test_index in cv.split(X, y):
+        index={}
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
         classifier = SVC(kernel='linear', C=1, random_state=0)
-        classifier.fit(X_train, y_train) 
+        rus = RandomUnderSampler(random_state=42, replacement=True)# fit predictor and target variable
+        x_rus, y_rus = rus.fit_resample(X_train,y_train)
+        from collections import Counter
+        classifier.fit(x_rus, y_rus) 
         y_predict = classifier.predict(X_test)
+        #compute the F score of each class
         # in the index dictionnary stock each prediction :
         # key = index of the test set
         # value = prediction
         for i in range(len(test_index)):
             index[test_index[i]]=y_predict[i]
-        
-    #create a new column in the dataset with the prediction
-    final["Prediction"]=0
-    #for each line in the dataset, we stock the prediction in the new column
-    for i in range(len(final)):
-        final["Prediction"][i]=index[i]
-        
-    #create a new column in the dataset with the GroupedPrediction
-    final["GroupedPrediction"]=0
-    prediction = {}
-    #for each value of the column "AgentNumber, we sum the number of prediction for each agent
-    for i in range(len(final)):
-        #stock all the line with the same AgentNumber
-        lines = final["AgentNumber"]==i
-        Agent = final[final["AgentNumber"]==i]
-        #compute sum of prediction in Agent
-        prediction[i] = Agent["Prediction"].sum()
-        #replace the value of GroupedPrediction by the sum of prediction for each line
+        #create a new column in the dataset with the prediction
+        y_pred = classifier.predict(G)
+        final=final.assign(Prediction=0)
+        #for each line in the dataset, we stock the prediction in the new column
+        predicts=[]
+        for i in range(len(final)):
+            final["Prediction"][i]=y_pred[i]
+            if i in index:
+                final["Prediction"][i]=y_pred[i]
+                predicts.append(final["AgentNumber"][i])
+        for i in range(len(final)):
+            if final["AgentNumber"][i] in predicts and i not in index:
+                final["Prediction"][i]=classifier.predict(G[i].reshape(1,-1))
 
-    for i in range(len(final)):
-        final["GroupedPrediction"][i]=prediction[final["AgentNumber"][i]]
-        
-    # compute F score of each class between the column GroupedPrediction and the column Class
+        arr = np.array(final["Prediction"])
 
-    #for each value of AgentNumber
-    # keep GroupedPrediction and Class
-    #since for each agent with the same AgentNumber, 
-    #these two columns have the same value, we can keep only one line
-    numb = final["AgentNumber"].unique()
-    maxNum = max(numb)
-    agN = 0
-    GP=[]
-    prediClass=[]
-    for i in range(maxNum+1):
-        ds = final[final["AgentNumber"]==i]
-        ds=ds.reset_index(drop=True)
-        GP.append(ds["GroupedPrediction"].iloc[0])
-        prediClass.append(ds["Class"].iloc[0])
-    GP = np.array(GP)
-    prediClass = np.array(prediClass)
+        #create a new column in the dataset with the GroupedPrediction
+        final["GroupedPrediction"]=0
+        prediction = {}
+        #for each value of the column "AgentNumber, we sum the number of prediction for each agent
+        for i in range(len(final)-1):
+            nb = final["AgentNumber"][i]
+            #stock all the line with the same AgentNumber
+            lines = final["AgentNumber"]==nb
+            Agent = final[final["AgentNumber"]==nb]
+            #compute sum of prediction in Agent
+            prediction[i] = Agent["Prediction"].sum()
+            #replace the value of GroupedPrediction by the 1 if the sum is >1, 0 otherwise
+            final["GroupedPrediction"][i]=1 if prediction[i]>1 else 0  
+            
+        # compute F score of each class between the column GroupedPrediction and the column Class
 
-    from sklearn.metrics import f1_score
-    a=f1_score(prediClass, GP, average=None)[0]
-    b=f1_score(prediClass, GP, average=None)[1]
+        #for each value of AgentNumber
+        # keep GroupedPrediction and Class
+        #since for each agent with the same AgentNumber, 
+        #these two columns have the same value, we can keep only one line
+        numb = final["AgentNumber"].unique()
+        maxNum = max(numb)
+        agN = 0
+        GP=[]
+        prediClass=[]
+        for i in range(maxNum+1):
+            ds = final[final["AgentNumber"]==i]
+            if len(ds)>0:
+                ds=ds.reset_index(drop=True)
+                GP.append(ds["GroupedPrediction"].iloc[0])
+                prediClass.append(ds["Class"].iloc[0])
+        GP = np.array(GP)
+        prediClass = np.array(prediClass)
+
+        # show the confusion matrix
+        from sklearn.metrics import confusion_matrix
+        import matplotlib.pyplot as plt
+        a = confusion_matrix(prediClass, GP)
+
+        from sklearn.metrics import f1_score
+        F11.append(f1_score(prediClass, GP, average=None)[1])
+        F00.append(f1_score(prediClass, GP, average=None)[0])
+
     data = pd.DataFrame(index=range(0,1),columns=["Method","F1_score0","F1_score1"])
-    data["Method"][0] = "Tabulard data"
-    data["F1_score0"][0] = str(a)[0:4]
-    data["F1_score1"][0] = str(b)[0:4]
-    data.to_csv("../results/Table3.csv",index=False)
+    data["Method"][0] = "Tabular data"
+    data["F1_score0"][0] = str(np.mean(F00))[0:4]+ "("+str(np.std(F00))[0:4]+")"
+    data["F1_score1"][0] = str(np.mean(F11))[0:4]+ "("+str(np.std(F11))[0:4]+")"
+    data.to_csv("../results/Table4.csv",index=False)
     
     
 
@@ -976,8 +1069,8 @@ def Table6(Ks,keep,labels,id_graphs_mono,id_graphs_iso,id_graphs_cg,occurences_m
 
 
 if __name__ == '__main__':
-    print("Computing results for Table 2")
-    Table2()
+    print("Computing results for Table 4")
+    Table4()
     print("Computing results for Table 5")
     arg="FOPPA"
     folder="../data/"+str(arg)+"/"
@@ -1007,4 +1100,5 @@ if __name__ == '__main__':
     table5 = Table5([10,50,100,150,15793],keep,labels,id_graphs_mono,id_graphs_iso,id_graphs_cg,occurences_mono,occurences_iso,occurences_cg_mono,PATTERNLENGTH,GRAPHLENGTH,cv)
     print("Computing results for Table 6")
     table5 = Table6([100],keep,labels,id_graphs_mono,id_graphs_iso,id_graphs_cg,occurences_mono,occurences_iso,occurences_cg_mono,PATTERNLENGTH,GRAPHLENGTH,CGLENGTH,cv)
-    Table3()
+    print("Computing results for Table 2")
+    Table2()
