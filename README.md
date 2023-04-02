@@ -51,7 +51,7 @@ In order to run the script that reproduces our ECML PKDD experiments, you also n
 
 
 ## Data
-Third, you need to set up the data to which you want to apply Pang. This can be the dataset from our paper, in which you will need to unzip several archives, or your own data, in which case they need to be respect the appropriate format. In both cases, see cf. Section [Usage](#usage).
+Third, you need to set up the data to which you want to apply Pang. This can be the dataset from our paper, in which case you will need to unzip several archives, or your own data, in which case they need to be respect the appropriate format. In both cases, see cf. Section [Usage](#usage).
 
 # Use
 We provide two scripts to use Pang:
