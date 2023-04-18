@@ -541,7 +541,8 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    importance_feat = [0.0]*50
+    NBPATTERNS=5
+    importance_feat = [0.0]*NBPATTERNS
     arg="FOPPA"
     folder="../data/"+str(arg)+"/"
     FILEGRAPHS=folder+str(arg)+"_graph.txt"
@@ -571,15 +572,16 @@ if __name__ == '__main__':
     labels = readLabels(FILELABEL)
     
     scoresGenBin = computeScoreMono(keep,labels,id_graphsMono,TAILLEPATTERN)
-    scoresGenOcc = computeScoreOccurences(keep,labels,id_graphsMono,numberoccurencesMono,TAILLEPATTERN)
-    scoresIndBin = computeScoreMono(keep,labels,id_graphsIso,TAILLEPATTERN)
-    scoresIndOcc = computeScoreOccurences(keep,labels,id_graphsIso,numberoccurencesIso,TAILLEPATTERN)
-    X_GenBin,numbers = KVector(keep,50,scoresGenBin,id_graphsMono,None,TAILLEGRAPHE)
-    X_GenOcc,xx = KVector(keep,50,scoresGenOcc,id_graphsMono,numberoccurencesMono,TAILLEGRAPHE)
-    X_IndBin,xx = KVector(keep,50,scoresIndBin,id_graphsIso,None,TAILLEGRAPHE)
+    #scoresGenOcc = computeScoreOccurences(keep,labels,id_graphsMono,numberoccurencesMono,TAILLEPATTERN)
+    #scoresIndBin = computeScoreMono(keep,labels,id_graphsIso,TAILLEPATTERN)
+    #scoresIndOcc = computeScoreOccurences(keep,labels,id_graphsIso,numberoccurencesIso,TAILLEPATTERN)
+    X_GenBin,numbers = KVector(keep,NBPATTERNS,scoresGenBin,id_graphsMono,None,TAILLEGRAPHE)
+    #X_GenOcc,xx = KVector(keep,500,scoresGenOcc,id_graphsMono,numberoccurencesMono,TAILLEGRAPHE)
+    #X_IndBin,xx = KVector(keep,500,scoresIndBin,id_graphsIso,None,TAILLEGRAPHE)
     X=X_GenBin
     Y=labels
-    X_IndOcc,xx = KVector(keep,50,scoresIndOcc,id_graphsIso,numberoccurencesIso,TAILLEGRAPHE)
+    #X_IndOcc,xx = KVector(keep,500,scoresIndOcc,id_graphsIso,numberoccurencesIso,TAILLEGRAPHE)
+    originalnumbers= copy.deepcopy(numbers) 
     from sklearn.model_selection import KFold
     cv = KFold(n_splits=10, random_state=42, shuffle=True)
     boole=True
@@ -599,7 +601,7 @@ if __name__ == '__main__':
             scoress=[]
             boole=False
             from sklearn.svm import SVC
-            for j in range(1,50):
+            for j in range(1,NBPATTERNS):
                 X_train =   np.array(X_train)
                 X_test =   np.array(X_test)
                 base_score = compute_results(X_train, y_train,X_test, y_test)
@@ -615,8 +617,8 @@ if __name__ == '__main__':
                 alpha = sorted(enumerate([base_score - s for s in scores]),
                     key=lambda ndx_score: ndx_score[1],
                     reverse=False)
-                print(max(scores))
-                #delete the features with the lowest importance
+                print(numbers)
+                #delete the features with the lowest importance score                                       
                 feat_num = alpha[0][0]
                 res.append(numbers[feat_num])
                 #delete from numbers the feature
@@ -624,7 +626,8 @@ if __name__ == '__main__':
                 X_train = np.delete(X_train, feat_num, axis=1)
                 X_test = np.delete(X_test, feat_num, axis=1)
         #write the results in a file
-        file = open("results.txt","w")
+        namedd= str(arg)+"_results.txt" 
+        file = open(namedd,"w")
         #write in the following order : base score, score after deleting the feature, feature deleted
         #warning : for the last feature, there is only the base score and the feature deleted
         for i in range(len(res)):
@@ -632,3 +635,28 @@ if __name__ == '__main__':
                 file.write(str(scoress[i])+" : "+str(res[i])+"\n")
             else:
                 file.write(str(scoress[i])+" : "+str(res[i])+" : "+str(scoress[i+1])+"\n")
+                
+            #do a plot of the results following the format : 
+            # in the x axis : each feature
+            # in the y axis : the step where the feature is deleted
+        import matplotlib.pyplot as plt
+        plot = plt.figure()
+        feature = []
+        for i in range(len(res)):
+            feature.append(i)
+        position = []
+        print(originalnumbers)
+        for i in range(len(res)):
+            #check the position of the feature in the list of features deleted  
+            position.append(originalnumbers.index(res[i]))
+        print(position)
+        print(feature)
+        plt.plot(feature,position)  
+        #Name the x axis : features number
+        plt.xlabel('Features number')
+        plt.ylabel('Step of deletion')
+        plt.title('Features importance')
+        # save the plot
+        #Name = name of the dataset+number of features+".png"
+        nameFile = str(arg)+str(len(res))+".png"
+        plt.savefig(nameFile)
