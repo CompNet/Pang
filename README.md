@@ -12,7 +12,7 @@ Pang is free software: you can redistribute it and/or modify it under the terms 
  
 
 # Description
-Pang is an algorithm which represents and classifies a collection of graphs according to their frequent patterns (subgraphs). The detail of this algorithm are described in an article [P'23].
+Pang is an algorithm which represents and classifies a collection of graphs according to their frequent patterns (subgraphs). The detail of this algorithm are described in an article [[P'23](#references)].
 This work was conducted in the framework of the DeCoMaP ANR project (Detection of corruption in public procurement markets -- ANR-19-CE38-0004). 
 
 **Content**
@@ -66,7 +66,7 @@ We provide two scripts to use Pang:
 * `PANG.py`: applies Pang in the general case, possibly to your own data.
 
 ## To Replicate the Paper Experiments
-To replicate the experiments in our Paper[P'23], first unzip the provided datasets, and run Pang on them. 
+To replicate the experiments in our Paper[[P'23](#references)], first unzip the provided datasets, and run Pang on them. 
 
 ### Data Preparation
 To unzip the datasets used in our experiments:
@@ -81,7 +81,7 @@ We retrieved the benchmark datasets from the [SPMF website](https://www.philippe
 * `DD` : DD dataset, representing amino acids and their interactions [[D'03](#references)]
 
 The public procurement dataset contains graphs extracted from the FOPPA database:
-* `FOPPA` : dataset extracted from FOPPA, a database of French public procurement notices [[P'22](#references)].
+* `FOPPA` : dataset extracted from FOPPA, a database of French public procurement notices [[P'23b](#references)].
 
 
 ### Processing
@@ -159,7 +159,7 @@ For the ECML PKDD assessment, we use the following algorithms for the sake of co
 * **[H'14']** M. Houbraken, S. Demeyer, T. Michoel, P. Audenaert, D. Colle, M. Pickavet. *The Index-Based Subgraph Matching Algorithm with General Symmetries (ISMAGS): Exploiting Symmetry for Faster Subgraph Enumeration*, PLoS ONE 9(5):e97896, 2014. DOI: [10.1371/journal.pone.0097896](https://doi.org/10.1371/journal.pone.0097896).
 * **[K'16]** N. M. Kriege, P. L. Giscard, R. Wilson. *On Valid Optimal Assignment Kernels and Applications to Graph Classification*, 30th International Conference on Neural Information Processing Systems, pp. 1623–1631, 2016. URL: [here](https://proceedings.neurips.cc/paper_files/paper/2016/hash/0efe32849d230d7f53049ddc4a4b0c60-Abstract.html)
 * **[N'17]** A. Narayanan, M. Chandramohan, R. Venkatesan, L. Chen, Y. Liu, S. Jaiswal. *graph2vec: Learning Distributed Representations of Graphs*, 13th International Workshop on Mining and Learning with Graphs, p. 21, 2017. URL: [here](https://arxiv.org/abs/1707.05005)
-* **[P'22]** L. Potin, V. Labatut, R. Figueiredo, C. Largeron, P.-H. Morand. *FOPPA: A database of French Open Public Procurement Award notices*, Technical Report, Avignon University, 2022.  [⟨hal-03796734⟩](https://hal.archives-ouvertes.fr/hal-03796734)
+* **[P'23b]** L. Potin, V. Labatut, P. H. Morand & C. Largeron. *FOPPA: An Open Database of French Public Procurement Award Notices From 2010–2020*, Scientific Data, 2023, 10:303. DOI: [10.1038/s41597-023-02213-z](https://dx.doi.org/10.1038/s41597-023-02213-z) [⟨hal-04101350⟩](https://hal.archives-ouvertes.fr/hal-04101350)
 * **[S'11]** N. Shervashidze, P. Schweitzer, E. J. van Leeuwen, K. Mehlhorn, K. M. Borgwardt. *Weisfeiler-Lehman Graph Kernels*, Journal of Machine Learning Research 12:2539–2561, 2011. URL: [here](https://dl.acm.org/citation.cfm?id=2078187)
 * **[S'21]** Z. Shaul, S. Naaz. *cgSpan: Closed Graph-Based Substructure Pattern Mining, IEEE International Conference on Big Data, pp. 4989-4998, 2021. DOI: [10.1109/bigdata52589.2021.9671995](https://doi.org/10.1109/bigdata52589.2021.9671995)
 * **[T'03]** H. Toivonen, A. Srinivasan, R. D. King, S. Kramer, C. Helma. *Statistical evaluation of the predictive toxicology challenge 2000-2001*, Bioinformatics 19(10):1183–1193, 2003. DOI: [10.1093/bioinformatics/btg130](https://doi.org/10.1093/bioinformatics/btg130)
