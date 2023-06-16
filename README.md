@@ -1,10 +1,7 @@
 Pang
-=======
+
 *Pattern-Based Anomaly Detection in Graphs*
-
 Pang is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation. For source availability and license information see licence.txt
-
------------------------------------------------------------------------
 
 # Description
 Pang is an algorithm which represents and classifies a collection of graphs according to their frequent patterns (subgraphs).
@@ -160,3 +157,4 @@ For the ECML PKDD assessment, we use the following algorithms for the sake of co
 * **[W'06]** N. Wale, G. Karypis. *Comparison of descriptor spaces for chemical compound retrieval and classification*, 6th International Conference on Data Mining, pp. 678–689, 2006. DOI: [10.1007/s10115-007-0103-5](https://doi.org/10.1007/s10115-007-0103-5)
 * **[Y'02]** X. Yan, J. Han. *gSpan: Graph-based substructure pattern mining*, IEEE International Conference on Data Mining, pp.721-724, 2002. DOI: [10.1109/ICDM.2002.1184038](https://doi.org/10.1109/ICDM.2002.1184038)
 * **[Z'18]** D. Zhang, J. Yin, X. Zhu, C. Zhang. *Network Representation Learning: A Survey*, IEEE Transactions on Big Data 6(1):3–28, 2018. DOI: [10.1109/tbdata.2018.2850013](http://doi.org/10.1109/tbdata.2018.2850013)
+
