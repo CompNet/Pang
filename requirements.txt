@@ -35,6 +35,8 @@ grakel=0.1.8=pypi_0
 grpcio=1.48.2=pypi_0
 h5py=3.1.0=pypi_0
 idna=3.4=pypi_0
+imbalanced-learn==0.8.1
+imblearn==0.0
 importlib-metadata=4.8.3=pypi_0
 importlib-resources=5.4.0=pypi_0
 intel-openmp=2023.0.0=h59b6b97_25923
