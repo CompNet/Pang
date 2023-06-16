@@ -66,7 +66,7 @@ We provide two scripts to use Pang:
 * `PANG.py`: applies Pang in the general case, possibly to your own data.
 
 ## To Replicate the Paper Experiments
-To replicate the experiments in our Paper [[P'23](#references)], first unzip the provided datasets, and run Pang on them. 
+To replicate the experiments in our Paper[[P'23](#references)], first unzip the provided datasets, and run Pang on them. 
 
 ### Data Preparation
 To unzip the datasets used in our experiments:
