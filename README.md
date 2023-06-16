@@ -12,7 +12,8 @@ Pang is free software: you can redistribute it and/or modify it under the terms 
  
 
 # Description
-Pang is an algorithm which represents and classifies a collection of graphs according to their frequent patterns (subgraphs).
+Pang is an algorithm which represents and classifies a collection of graphs according to their frequent patterns (subgraphs). The detail of this algorithm are described in an article [P'23].
+This work was conducted in the framework of the DeCoMaP ANR project (Detection of corruption in public procurement markets -- ANR-19-CE38-0004). 
 
 **Content**
 * [Organization](#organization)
@@ -65,7 +66,7 @@ We provide two scripts to use Pang:
 * `PANG.py`: applies Pang in the general case, possibly to your own data.
 
 ## To Replicate the Paper Experiments
-To replicate our ECML PKDD experiments, first unzip the provided datasets, and run Pang on them. 
+To replicate the experiments in our Paper[P'23], first unzip the provided datasets, and run Pang on them. 
 
 ### Data Preparation
 To unzip the datasets used in our experiments:
@@ -151,6 +152,7 @@ For the ECML PKDD assessment, we use the following algorithms for the sake of co
 
 
 # References
+* **[P'23]** L. Potin, V. Labatut, R. Figueiredo, C. Largeron *Pattern Mining for Anomaly Detection in Graphs: Application to Fraud in Public Procurement*, ECML PKDD 2023.
 * **[C'04]** L. P. Cordella, P. Foggia, C. Sansone, M. Vento. *A (sub)graph isomorphism algorithm for matching large graphs*, IEEE Transactions on Pattern Analysis and Machine Intelligence, 26(10):1367-1372, 2004. DOI: [10.1109/tpami.2004.75](https://doi.org/10.1109/tpami.2004.75)
 * **[D'91]** A. S. Debnath, R. L. Lopez, G. Debnath, A. Shusterman, C. Hansch. *Structure-activity relationship of mutagenic aromatic and heteroaromatic nitro compounds. Correlation with molecular orbital energies and hydrophobicity*, Journal of Medicinal Chemistry 34(2):786–797, 1991. DOI: [10.1021/jm00106a046](https://doi.org/10.1021/jm00106a046)
 * **[D'03]** P. D. Dobson, A. J. Doig. *Distinguishing enzyme structures from non-enzymes without alignments*, Journal of Molecular Biology 330(4):771–783, 2003. DOI: [10.1016/S0022-2836(03)00628-4](https://doi.org/10.1016/S0022-2836(03)00628-4)
