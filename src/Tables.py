@@ -141,8 +141,8 @@ from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.calibration import CalibratedClassifierCV
 
 from sklearn import metrics
-def compute_results(features_train, labels_train, features_test, labels_test):
-	clf = SVC(C=1000)
+def compute_results(features_train, labels_train, features_test, labels_test,C):
+	clf = SVC(C=C)
 	clf.fit(features_train,labels_train)
 	res = clf.predict(features_test)
 	ok = 0
@@ -737,7 +737,7 @@ def tableScore(K,patterns,file,h):
 
 #fuction saveDF
 
-def saveDF(dfResults,arg,K,h,QQ,f1score,patternslist):
+def saveDF(dfResults,arg,K,h,QQ,f1score,patternslist,k_selected,clusters_list):
     # assign correct values
     if QQ == 0:
          representation = "BINARY"
@@ -769,16 +769,45 @@ def saveDF(dfResults,arg,K,h,QQ,f1score,patternslist):
     elif h == 7:
          metric = "Strength"
     #add the row to the dataframe with loc
-    dfResults.loc[len(dfResults)] = [arg,K,metric,representation,patternstype,f1score,patternslist]
-    dfResults.to_csv("../results/dfResults.csv",sep=";",index=False)
+    dfResults.loc[len(dfResults)] = [arg,K,metric,representation,patternstype,f1score,patternslist,k_selected,clusters_list]
+    dfResults.to_csv("../results/dfResultsWithK.csv",sep=";",index=False)
     return dfResults
 
+from sklearn.cluster import KMeans
+
+
+def select_k(X,k_range):
+    wss = np.empty(len(k_range))
+    print(len(wss))
+    print(k_range)
+    for k in k_range:
+        kmeans = KMeans(n_clusters=k,n_init="auto",random_state=42)
+        kmeans.fit(X)
+        wss[k-1] = ((X - kmeans.cluster_centers_[kmeans.labels_]) ** 2).sum()
+
+    slope = (wss[0] - wss[-1]) / (k_range[0] - k_range[-1])
+    intercept = wss[0] - slope * k_range[0]
+    y = k_range * slope + intercept
+
+    return k_range[(y - wss).argmax()]
+
+def RedondanceMotif(motifs,NbOccurences,NBGRAPHES):
+    results=[]
+    for motif in motifs:
+        print(motif)
+        results.append(np.zeros(NBGRAPHES))
+        for i in range(len(NbOccurences[motif])):
+            results[-1][NbOccurences[motif][i]]=1
+    return results
+
 if __name__ == '__main__':
-    dfResults = pd.DataFrame(columns=['DATASET','K','METRIC','REPRESENTATION','PATTERNSTYPE','F1SCORE','PATTERNSLIST'])
+    dfResults = pd.DataFrame(columns=['DATASET','K','METRIC','REPRESENTATION','PATTERNSTYPE','F1SCORE','PATTERNSLIST',"K_OPTIMAL","CLUSTERS_LIST"])
     cv = StratifiedKFold(n_splits=10,shuffle=True,random_state=42)
     KsPossible=[10,25,50,100,200]
-    args = ["PTC","FOPPA","DD","MUTAG","NCI1"]
+    args = ["FOPPA","DD","MUTAG","PTC","NCI1"]
+    dicoC = {"MUTAG":1000,"NCI1":100,"NCI109":1,"PTC":100,"DD":1,"FOPPA":100}
     for arg in args:
+        C = dicoC[arg]
         folder="../data/"+str(arg)+"/"
         FILEGRAPHS=folder+str(arg)+"_graph.txt"
         FILESUBGRAPHS=folder+str(arg)+"_pattern.txt"
@@ -840,6 +869,18 @@ if __name__ == '__main__':
                         #computeCorrelation(numbers,id_graphsIso,numberoccurencesIso,TAILLEGRAPHE,"Type"+str(QQ)+"Score"+str(h)+str(arg)+"_IndoccMatrix0905")
                     temp=[]
                     motifs=numbers
+                    if QQ==0 or QQ==1:
+                        res = RedondanceMotif(motifs,id_graphsMono,TAILLEGRAPHE)
+                    else:
+                        res = RedondanceMotif(motifs,id_graphsIso,TAILLEGRAPHE)
+                    k_range = range(1,min(50,NBPATTERNS))
+                    K_selected=select_k(res,k_range)
+                    #create a KMeans with the number of clusters = K_selected
+                    kmeans = KMeans(n_clusters=K_selected,n_init="auto",random_state=42)
+                    #fit the KMeans on the data
+                    kmeans.fit(res)
+                    #get the clusters 
+                    clusters_list = kmeans.labels_
                     Y=labels
                     for train_index, test_index in cv.split(X,labels):
                         X_train=[]
@@ -852,9 +893,9 @@ if __name__ == '__main__':
                         for l in test_index:
                             X_test.append(X[l])
                             y_test.append(Y[l])
-                        temp.append(compute_results(X_train,y_train,X_test, y_test))
+                        temp.append(compute_results(X_train,y_train,X_test, y_test,C))
                     score = np.mean(temp)
-                    dfResults = saveDF(dfResults,arg,NBPATTERNS,h,QQ,score,numbers)
+                    dfResults = saveDF(dfResults,arg,NBPATTERNS,h,QQ,score,numbers,K_selected,clusters_list)
             
             """
             Ks = [10,30,50,100]
