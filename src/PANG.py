@@ -140,6 +140,17 @@ def load_graphs(fileName,TAILLE):
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.calibration import CalibratedClassifierCV
 
+
+
+def RedondanceMotif(motifs,NbOccurences,NBGRAPHES):
+    results=[]
+    for motif in motifs:
+        print(motif)
+        results.append(np.zeros(NBGRAPHES))
+        for i in range(len(NbOccurences[motif])):
+            results[-1][NbOccurences[motif][i]]=1
+    return results
+
 from sklearn import metrics
 def compute_results(features_train, labels_train, features_test, labels_test):
 	clf = SVC(C=1000)
@@ -732,10 +743,31 @@ def tableScore(K,patterns,file,h):
     f.close()
 
 
+import numpy as np
+
+from sklearn.cluster import KMeans
+
+
+def select_k(X,k_range):
+    wss = np.empty(len(k_range))
+    print(len(wss))
+    print(k_range)
+    for k in k_range:
+        kmeans = KMeans(k)
+        kmeans.fit(X)
+        wss[k-1] = ((X - kmeans.cluster_centers_[kmeans.labels_]) ** 2).sum()
+
+    slope = (wss[0] - wss[-1]) / (k_range[0] - k_range[-1])
+    intercept = wss[0] - slope * k_range[0]
+    y = k_range * slope + intercept
+
+    return k_range[(y - wss).argmax()]
+
+
 if __name__ == '__main__':
     cv = StratifiedKFold(n_splits=10,shuffle=True,random_state=42)
     KsPossible=[10,25,50,100,200]
-    arg="NCI1"
+    arg="FOPPA"
     folder="../data/"+str(arg)+"/"
     FILEGRAPHS=folder+str(arg)+"_graph.txt"
     FILESUBGRAPHS=folder+str(arg)+"_pattern.txt"
@@ -895,6 +927,17 @@ if __name__ == '__main__':
                     #plt.savefig(str(h)+str(arg)+"_upsetplot0905.pdf")
                     #plt.savefig(str(h)+str(arg)+"_upsetplot0905.svg")
                 X=X_GenBin
+                res = RedondanceMotif(motifs[QQ],id_graphsMono,TAILLEGRAPHE)
+                k_range = range(1,NBPATTERNS)
+                K_selected=select_k(res,k_range)
+                #create a KMeans with the number of clusters = K_selected
+                kmeans = KMeans(n_clusters=K_selected)
+                #fit the KMeans on the data
+                kmeans.fit(res)
+                #get the clusters 
+                clusters = kmeans.labels_
+            
+                """
                 print("TAILLE VECTEUR")
                 print(len(X)) 
                 Y=labels
@@ -937,7 +980,6 @@ if __name__ == '__main__':
             fileAnalyse = open(NameAnalyse,"a")
             fileAnalyse.write("K="+str(NBPATTERNS)+ " Extracted patterns : "+str(np.mean(scoressss[1])-np.mean(scoressss[0]))+" Induced patterns : "+str(np.mean(scoressss[3])-np.mean(scoressss[2]))+"\n")
             fileAnalyse.close()
-            """
                     if boole:
                         res=[]
                         scoress=[]
