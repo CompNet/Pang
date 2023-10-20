@@ -383,7 +383,7 @@ def computeScoreMono(keep,labels,id_graphs,TAILLEPATTERN):
     
     
     
-    return growthRate,supportDiffernt,unusualness,generalizationQuotient,OddsRatio,TruePositiveRate,FalsePositiveRate,Strength
+    return supportDiffernt
 import tqdm   
 ###################################
             
@@ -560,6 +560,22 @@ def cross_validation(X,Y,cv,classifier):
         X_test=[]
         y_train=[]
         y_test=[]
+        for l in train_index:
+            X_train.append(X[l])
+            y_train.append(Y[l])
+        for l in test_index:
+            X_test.append(X[l])
+            y_test.append(Y[l])
+        #fit the classifier on the train set
+        classifier.fit(X_train,y_train)
+        #predict the labels of the test set
+        y_predict = classifier.predict(X_test)
+        #find the F1 score of each class on the test set
+        # use the function for finding the f score between two labels sets 
+        # using sklearn.metrics
+        
+        F1_score0.append(metrics.f1_score(y_test, y_predict, average=None)[0])
+        F1_score1.append(metrics.f1_score(y_test, y_predict, average=None)[1])
         
     F1_score0_mean = np.mean(F1_score0)
     F1_score0_std = np.std(F1_score0)
@@ -568,7 +584,29 @@ def cross_validation(X,Y,cv,classifier):
     #return the mean and standard deviation of the F1 score of each class
     return F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std
 
-
+def ComputeRepresentation(keepPatterns,id_graphs,labels,LENGTHGRAPH):
+    numberoccurences=None
+    vectorialRep = []
+    newLabels = []
+    c=0
+    for j in range(LENGTHGRAPH):#330
+            if j in keep:
+                newLabels.append(labels[j])
+                vectorialRep.append([])
+                for k in keepPatterns:
+                    if j in id_graphs[k]:
+                        for t in range(len(id_graphs[k])):
+                            if id_graphs[k][t]==j:
+                                if numberoccurences==None:
+                                    occu=1
+                                else:
+                                    occu = numberoccurences[k][t]
+                        vectorialRep[c].append(occu)
+                    else:
+                        vectorialRep[c].append(0)
+                c=c+1
+    X = vectorialRep
+    return X,newLabels
 def pangProcessing(Ks,keep,labels,id_graphs_mono,id_graphs_iso,occurences_mono,occurences_iso,LENGTHPATTERN,LENGTHGRAPHS):
     cv = StratifiedKFold(n_splits=10,shuffle=True)
     scoresGenBin = computeScoreMono(keep,labels,id_graphs_mono,LENGTHPATTERN)
@@ -831,6 +869,12 @@ def proceedAblation(X_train,X_test,y_train,y_test,motifs,NBPATTERNS,NBCLUSTERS,d
             feat_num = alpha[0][0]
             scoress.append(alpha[0][1])
             res.append(numbers[feat_num])
+            #save results in a file
+            f=open(NamePlotAblationStep1,"a")   
+            f.write("Numero de cluster : "+ str(alpha[0][0])+"\n")
+            #write score associated to the deleted feature
+            f.write("Score : "+ str(alpha[0][1])+"\n")
+            f.close()
             #delete from numbers the feature
             clustersDejaPris.append(feat_num)
             NbClusterActuel = NbClusterActuel-1
@@ -874,17 +918,56 @@ def plot_dendrogram(model, **kwargs):
     dendrogram(linkage_matrix, **kwargs)
 
 def metricDotProduct(X):
-    res=np.zeros((len(X),len(X)))
-    for i in range(len(X)):
-        for j in range(i,len(X)):
-            res[i][j]=(len(X[i])-int(np.dot(X[i],X[j])))/2
-            res[j][i]=res[i][j]
-        
-    return res
+    print("Avant")
+    a = (len(X[0])-np.matmul(X,np.transpose(X)))/2
+    print("Apres")
+    return a
+
+
+def keepOnlyPatterns(clusters):
+    #Select 1 pattern per cluster
+    #clusters = model.labels_
+    nbClusters = max(clusters)+1
+    patterns = []
+    for i in range(nbClusters):
+        for j in range(len(clusters)):
+            if clusters[j]==i:
+                patterns.append(j)
+                break
+    return patterns
+
+
+def selectTopPatterns(diff,K):
+    keepPatterns = []
+    if K==len(diff):
+        return range(0,len(diff))
+    else:
+        for i in range(K):
+            if sum(diff)==0:
+                break
+            bestScore = np.max(diff)
+            bestPattern = np.argmax(diff)
+            keepPatterns.append(bestPattern)
+            diff[bestPattern]=0
+        return keepPatterns
+
+def selectTopPatternsUnique(diff,K,id_graphs):
+    keepPatterns = []
+    for i in range(K):
+        if sum(diff)==-1*len(diff):
+            break
+        bestScore = np.max(diff)
+        bestPattern = np.argmax(diff)
+        keepPatterns.append(bestPattern)
+        diff[bestPattern]=-1
+        for j in range(len(diff)):
+            if id_graphs[bestPattern]==id_graphs[j]:
+                diff[j]=-1
+    return keepPatterns
+
 if __name__ == '__main__':
     cv = StratifiedKFold(n_splits=10,shuffle=True,random_state=42)
-    KsPossible=[10,25,50,100,200]
-    arg="PTC"
+    arg="DD"
     folder="../data/"+str(arg)+"/"
     FILEGRAPHS=folder+str(arg)+"_graph.txt"
     FILESUBGRAPHS=folder+str(arg)+"_pattern.txt"
@@ -921,46 +1004,148 @@ if __name__ == '__main__':
     for i in range(len(uniquePatterns)):
         for j in range(len(uniquePatterns[i])):
                 superMatrice[i][uniquePatterns[i][j]]=1
-                
     ### transform the matrix into a list of list
     superMatrice = superMatrice.tolist()
+    #transform each list as a numpy array
+    for i in range(len(superMatrice)):
+        superMatrice[i]=np.array(superMatrice[i])
     #check the number of same patterns
     resultsComplete = []
-    resultsAverage = []
-    resultsSingle = []
-    MAXSTEP=25
-    labelss = []
+    F1Mean = []
+    resultsCompleteBase=0
+    F1Base=0
+    MAXSTEP=165
     dotProductMat = metricDotProduct(superMatrice)
-    for i in range(1,MAXSTEP):
-        print(i)
-        model = AgglomerativeClustering(distance_threshold=i,metric="precomputed",n_clusters=None,linkage="complete")
-        model = model.fit(dotProductMat)
-        resultsComplete.append(model.n_clusters_)
-        model = AgglomerativeClustering(distance_threshold=i,metric="precomputed", n_clusters=None,linkage="average")
-        model = model.fit(dotProductMat)
-        resultsAverage.append(model.n_clusters_)
-        model = AgglomerativeClustering(distance_threshold=i,metric="precomputed", n_clusters=None,linkage="single")
-        model = model.fit(dotProductMat)
-        resultsSingle.append(model.n_clusters_)
-        labelss.append(model.labels_)
+    NUMBER=6
+    model = AgglomerativeClustering(distance_threshold=NUMBER,metric="precomputed",n_clusters=None,linkage="complete")
+    model = model.fit(dotProductMat)
+    patternsStepI = keepOnlyPatterns(model.labels_)
+    dicoCluster = {}
+    for i in range(len(model.labels_)):
+        dicoCluster[i]=model.labels_[i]
+    vectRepresentation,vectLabels = ComputeRepresentation(patternsStepI,id_graphsMono,labelss,TAILLEGRAPHE)
+    ccc=0
+    for train_index, test_index in cv.split(vectRepresentation,vectLabels):
+        #split the dataset into train and test
+        X_train=[]
+        X_test=[]
+        y_train=[]
+        y_test=[]
+        for l in train_index:
+            X_train.append(vectRepresentation[l])
+            y_train.append(vectLabels[l])
+        for l in test_index:
+            X_test.append(vectRepresentation[l])
+            y_test.append(vectLabels[l])
+        if ccc==0:
+            nameCC = "results/"+arg+"AblationStep1.txt"
+            scoress,NbClusterInThisCase = proceedAblation(X_train,X_test,y_train,y_test,patternsStepI,len(patternsStepI),model.n_clusters_,dicoCluster,nameCC)
+            ccc=ccc+1
+    for i in range(150,MAXSTEP):
+        if i==-1:
+            """
+            resultsCompleteBase = len(id_graphsMono)
+            vectRepresentation,vectLabels = ComputeRepresentation(range(0,TAILLEPATTERN),id_graphsMono,labelss,TAILLEGRAPHE)
+            F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std=cross_validation(vectRepresentation,vectLabels,cv,SVC(C=100))
+            F1Base=F1_score1_mean
+            """
+        elif i >-1:
+            print(i)
+            model = AgglomerativeClustering(distance_threshold=i,metric="precomputed",n_clusters=None,linkage="complete")
+            model = model.fit(dotProductMat)
+            resultsComplete.append(model.n_clusters_)
+            patternsStepI = keepOnlyPatterns(model.labels_)
+            vectRepresentation,vectLabels = ComputeRepresentation(patternsStepI,id_graphsMono,labelss,TAILLEGRAPHE)
+            F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std=cross_validation(vectRepresentation,vectLabels,cv,SVC(C=1000))
+            F1Mean.append(F1_score1_mean)
     #plot each result (no lines, only points)
     #use differents colors for each linkage
     labels = model.labels_
-    #plot a histogram indicating the number of pattern in each clusters
-    plt.plot(range(1,MAXSTEP),resultsComplete,"o",label="Complete")
-    plt.plot(range(1,MAXSTEP),resultsAverage,"o",label="Average")
-    plt.plot(range(1,MAXSTEP),resultsSingle,"o",label="Single")
-    #display the legend
-    plt.legend()
-    plt.xlabel("Threshold")
-    plt.ylabel("Number of clusters")
-    plt.title("Number of clusters for each threshold for the dataset "+arg)
-    plt.savefig("NumberClustersMUTAG_1210.pdf")
-    plt.show()
+    #plot a histogram indicating the number of pattern in each clusters 
     
-for j in range(len(id_graphsMono)):
-    for k in range(len(uniquePatterns)):
-        if id_graphsMono[j]==uniquePatterns[k]:
-            dfCluster["NumeroPatt"][j]=j
-            dfCluster["Cluster"][j]=labels[k]
-dfCluster.to_csv("ClustersPTC.csv",index=False)
+    #### PLOT 1
+    #### Plot the numbers of clusters according to the distance threshold
+    plt.figure()
+    plt.plot(range(150,MAXSTEP),resultsComplete)
+    plt.xlabel("Distance threshold")
+    plt.ylabel("Number of clusters")
+    #Add a point for the number of clusters with the original representation
+    plt.plot(-1,resultsCompleteBase,marker="o",color="red")
+    #Save
+    plt.savefig("results/"+arg+"NbClusters.pdf")
+    #### PLOT 2
+    #### Plot the numbers of clusters according to the distance threshold using a logarithmic scale
+    plt.figure()
+    plt.plot(range(150,MAXSTEP),resultsComplete)
+    #Add a point for the number of clusters with the original representation
+    plt.plot(-1,resultsCompleteBase,marker="o",color="red")
+    plt.xlabel("Distance threshold")
+    plt.ylabel("Number of clusters")
+    plt.yscale("log")
+    #Save
+    plt.savefig("results/"+arg+"NbClustersLog.pdf")
+    
+    #### PLOT 3
+    #### Plot the F1 score according to the distance threshold
+    plt.figure()
+    plt.plot(range(150,MAXSTEP),F1Mean)
+    #Add a point for the F1Score with the original representation
+    plt.plot(-1,F1Base,marker="o",color="red")  
+    plt.xlabel("Distance threshold")
+    plt.ylabel("F1 score")
+    #Save
+    plt.savefig("results/"+arg+"F1Score.pdf")
+    
+    #### PLOT 4
+    #### Plot the F1 score according to the distance threshold using a logarithmic scale
+    plt.figure()
+    plt.plot(range(150,MAXSTEP),F1Mean)
+    #Add a point for the F1Score with the original representation
+    plt.plot(-1,F1Base,marker="o",color="red")  
+    plt.xlabel("Distance threshold")
+    plt.ylabel("F1 score")
+    plt.yscale("log")
+    #Save   
+    plt.savefig("results/"+arg+"F1ScoreLog.pdf")
+    
+    #### PLOT 5
+    ### Plot at the same time the number of clusters and the F1 score according to the distance threshold
+    # the number of clusters is in blue
+    # the F1 score is in red
+    #axis for the number of clusters is logarithmic
+    plt.figure()
+    #plot with legend
+    plt.plot(range(150,MAXSTEP),resultsComplete,color="blue",label="Number of clusters")
+    plt.xlabel("Distance threshold")
+    #Add a point for the F1Score with the original representation
+    plt.plot(-1,resultsCompleteBase,marker="o",color="blue")
+    plt.ylabel("Number of clusters")
+    plt.yscale("log")
+    plt.twinx()
+    plt.plot(range(150,MAXSTEP),F1Mean,color="red",label="F1 Score")
+    plt.ylabel("F1 score")
+    plt.legend()
+    #Add a point for the F1Score with the original representation
+    plt.plot(-1,F1Base,marker="x",color="red")  
+    #Save
+    plt.savefig("results/"+arg+"NbClustersF1ScoreLog.pdf")
+    #DataframeResults : contient pour chaque valeur de K le score de chaque representation
+    diff = computeScoreMono(keep,labelss,id_graphsMono,TAILLEPATTERN)
+    KsPossible=[10,25,50,100,200,len(diff)]
+    dataframeResults = pd.DataFrame(index=range(0,len(KsPossible)),columns=["K","ALL","Unique"])
+    for K in [10,25,50,100,200,len(diff)]:
+        patternALL=selectTopPatterns(diff,K)
+        patternUnique = selectTopPatternsUnique(diff,K,id_graphsMono)
+        print(len(patternUnique))
+        ###
+        vectRepresentation,vectLabels = ComputeRepresentation(patternALL,id_graphsMono,labelss,TAILLEGRAPHE)
+        print(vectLabels)
+        F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std=cross_validation(vectRepresentation,vectLabels,cv,SVC(C=100))
+        
+        dataframeResults["K"][KsPossible.index(K)]=K
+        dataframeResults["ALL"][KsPossible.index(K)]=F1_score1_mean
+        ###
+        vectRepresentation,vectLabels = ComputeRepresentation(patternUnique,id_graphsMono,labelss,TAILLEGRAPHE)
+        F1_score0_mean,F1_score0_std,F1_score1_mean,F1_score1_std=cross_validation(vectRepresentation,vectLabels,cv,SVC(C=100))
+        dataframeResults["Unique"][KsPossible.index(K)]=F1_score1_mean
+    dataframeResults.to_csv("results/"+arg+"F1Score.csv",sep=";",index=False)   
