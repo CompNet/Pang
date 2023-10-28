@@ -927,6 +927,90 @@ def keepOnlyPatterns(clusters):
                 break
     return patterns
 
+def performClustering(pattern,distance):
+    model = AgglomerativeClustering(distance_threshold=distance,metric="precomputed",n_clusters=None,linkage="complete")
+    model = model.fit(pattern)
+    return model
+
+def selectCurrentClustering(pattern,distance):
+    """ This function perform the full clustering for one specific value"""
+    model = performClustering(pattern,distance)
+    clusters = model.labels_
+    nbClusters = max(clusters)+1
+    #Create a dictionnary associating to each pattern the cluster it belongs to
+    dicoClusterPattern = {}
+    for i in range(len(clusters)):
+        dicoClusterPattern[i]=clusters[i]
+        
+    # Créer un dictionnaire qui associe à chaque cluster la liste des id des motifs qui lui appartiennent
+    dicoCluster = {}
+    # Calculer le centroïde de chaque cluster
+    for cluster_id in range(n_clusters):
+        cluster_points = []
+        id_clusters_points = []
+        for i in range(len(model.labels_)):
+            if model.labels_[i]==cluster_id:
+                cluster_points.append(superMatrice[i])
+                id_clusters_points.append(i)
+        cluster_centroid = np.mean(cluster_points, axis=0)
+        # Calculer la distance de chaque point du cluster au centroïde
+        distances = cdist(cluster_points, [cluster_centroid])
+        
+        # Trouver l'indice du point le plus proche du centroïde
+        central_point_index = np.argmin(distances)
+        
+        # Ajouter l'id du point le plus central au tableau
+        dicoCluster[cluster_id] = id_clusters_points[central_point_index]
+    return model,clusters,dicoCluster,dicoClusterPattern
+
+def ExtendDictionnary(dicoClusterPattern,dicoRepetition):
+    newDictionnary = {}
+    for key in dicoRepetition.keys():
+        newDictionnary[key]=dicoClusterPattern[dicoRepetition[key]]
+    return newDictionnary
+        
+def proceedAblationForCluster(X_train,X_test,y_train,y_test,motifs,NBPATTERNS,NBCLUSTERS,dictionnaryCluster):
+    """ This function proceed to an ablation study on the specified dataset, removing one cluster at a time
+    X_train : training set
+    X_test : test set
+    y_train : training labels
+    y_test : test labels
+    motifs : list of patterns
+    NBPATTERNS : number of patterns
+    NBCLUSTERS : number of clusters
+    dicoCluster : dictionnary associating to each pattern its cluster""" 
+    #Save all results in a csv file
+    # First : compute the score without removing any cluster
+    base_score = compute_results(X_train,y_train,X_test, y_test)
+    # Now : remove one cluster at a time
+    scores = []
+    res=[]
+    scoress=[]
+    for j in range(0,NBCLUSTERS):
+        valueee=[]
+        X_train =  np.array(X_train)
+        X_test =  np.array(X_test)
+        use_column = [True for ndx in range(NBPATTERNS)]
+        for k in range(len(use_column)):
+            if dictionnaryCluster[motifs[k]] == j:
+                use_column[k]=False
+        scores.append(compute_results(X_train[:, use_column],y_train,X_test[:, use_column], y_test))
+        valueee.append(scores[j]-base_score)
+        alpha = sorted(enumerate([s for s in scores]),
+            key=lambda ndx_score: ndx_score[1],
+            reverse=True)
+        #delete the features with the lowest importance score                                       
+        feat_num = alpha[0][0]
+        scoress.append(alpha[0][1])
+        res.append(feat_num)
+        #save results in a file
+        f=open("testAblation","a")
+        f.write("Numero de cluster : "+ str(alpha[0][0])+"\n")
+        #write score associated to the deleted feature
+        f.write("Score : "+ str(alpha[0][1])+"\n")
+        f.close()
+    return scoress
+    
 
 def selectTopPatterns(diff,K):
     keepPatterns = []
@@ -965,7 +1049,7 @@ if __name__ == '__main__':
     for classifier in listeClassifier:
         for cc in range(0,1):
             cv = StratifiedKFold(n_splits=10,shuffle=True,random_state=42)
-            arg="DD"
+            arg="MUTAG"
             folder="../data/"+str(arg)+"/"
             FILEGRAPHS=folder+str(arg)+"_graph.txt"
             FILESUBGRAPHS=folder+str(arg)+"_pattern.txt"
@@ -997,12 +1081,18 @@ if __name__ == '__main__':
             
             #Unique 
             ##Test Unique patterns
+            
+            #create a dictionnary, for each pattern , indicate the unique pattern it belongs to
+            dicoRepetition = {}
             patternsUnique=[]
             dejaVu = []
             for i in tqdm.tqdm(range(len(id_graphsMono))):
                 if id_graphsMono[i] not in dejaVu:
                     patternsUnique.append(i)
                     dejaVu.append(id_graphsMono[i]) 
+                    dicoRepetition[i]=i
+                else:
+                    dicoRepetition[i]=dejaVu.index(id_graphsMono[i])
             
             #vectors = createVectorialRepresentation(uniquePatterns,TAILLEGRAPHE)
             #saveUniqueinCSV(uniquePatterns,id_graphsMono)
