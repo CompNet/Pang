@@ -384,8 +384,6 @@ def computeScoreMono(keep,labels,id_graphs,TAILLEPATTERN):
     
     
     
-    
-    
     return growthRate,supportDiffernt,TruePositiveRate,FalsePositiveRate,Strength
 import tqdm   
 ###################################
@@ -665,6 +663,7 @@ def main(argv):
             FILEMONOSET=folder+str(arg)+"_mono.txt"
             FILEISOSET=folder+str(arg)+"_iso.txt"
             FILELABEL =folder+str(arg)+"_label.txt"
+            FILECLOSED =folder+str(arg)+"_CG.txt"
             TAILLEGRAPHE=read_Sizegraph(FILEGRAPHS)
             TAILLEPATTERN=read_Sizegraph(FILESUBGRAPHS)
       elif opt in ("-k"):
@@ -690,6 +689,7 @@ def main(argv):
     print("Reading processed patterns")
     xx,id_graphsMono,numberoccurencesMono = load_patterns(FILEMONOSET,TAILLEPATTERN)
     xx,id_graphsIso,numberoccurencesIso = load_patterns(FILEISOSET,TAILLEPATTERN)
+    xx,id_graphsClosed,numberoccurencesClosed = load_patterns(FILECLOSED,TAILLEPATTERN)
     keep = graphKeep(PatternsRed,FILELABEL)
     print("Processing PANG")
     pangProcessing(Ks,keep,labels,id_graphsMono,id_graphsIso,numberoccurencesMono,numberoccurencesIso,TAILLEPATTERN,TAILLEGRAPHE)
@@ -1134,7 +1134,9 @@ def RankPatternForAScoreCluster(Scores,dico,TAILLECLUSTER):
     nbp = 0
     for i in range(len(triIndice)):
         nbp=nbp+1
-        if dico[triIndice[i]] not in dejaPris:
+        if dico[triIndice[i]]==-1:
+            continue
+        elif dico[triIndice[i]] not in dejaPris:
                 results.append(dico[triIndice[i]])
                 dejaPris.append(dico[triIndice[i]])
                 NbClusterToTake=NbClusterToTake-1
@@ -1152,7 +1154,6 @@ def RankPatternForAScore(Scores,dico,TAILLERANGE):
     #creer une liste avec les indices triés, en enlevant les valeurs égales a 0
     triIndice = []
     for i in range(len(alpha)):
-        if alpha[i][1]!=0:
             triIndice.append(alpha[i][0])  
     #On prend les K premiers patterns
     triIndice = triIndice[0:TAILLERANGE]
@@ -1161,7 +1162,9 @@ def RankPatternForAScore(Scores,dico,TAILLERANGE):
     #Si non, on le prend
     nbc=0
     for i in range(len(triIndice)):
-        if dico[triIndice[i]] not in dejaPris:
+        if dico[triIndice[i]]==-1:
+            continue
+        elif dico[triIndice[i]] not in dejaPris:
             results.append(dico[triIndice[i]])
             dejaPris.append(dico[triIndice[i]])
             nbc=nbc+1 
@@ -1173,16 +1176,18 @@ if __name__ == '__main__':
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.neighbors import KNeighborsClassifier
     listeClassifier = ["SVC"]
+    TABLERESULTS = pd.DataFrame(index=range(0,100),columns=["Score","PATTERNS"])
     for classifier in listeClassifier:
         for cc in range(0,1):
             cv = StratifiedKFold(n_splits=5,shuffle=True,random_state=42)
-            arg="DD"
+            arg="FOPPA"
             folder="../data/"+str(arg)+"/"
             FILEGRAPHS=folder+str(arg)+"_graph.txt"
             FILESUBGRAPHS=folder+str(arg)+"_pattern.txt"
             FILEMONOSET=folder+str(arg)+"_mono.txt"
             FILEISOSET=folder+str(arg)+"_iso.txt"
             FILELABEL =folder+str(arg)+"_label.txt"
+            FILECLOSED =folder+str(arg)+"_CG.txt"
             TAILLEGRAPHE=read_Sizegraph(FILEGRAPHS)
             TAILLEPATTERN=read_Sizegraph(FILESUBGRAPHS)
             keep= []
@@ -1203,177 +1208,280 @@ if __name__ == '__main__':
             print("Reading processed patterns")
             xx,id_graphsMono,numberoccurencesMono = load_patterns(FILEMONOSET,TAILLEPATTERN)
             xx,id_graphsIso,numberoccurencesIso = load_patterns(FILEISOSET,TAILLEPATTERN)
+            xx,id_graphsClosed,numberoccurencesClosed = load_patterns(FILECLOSED,TAILLEPATTERN) 
             labelss = readLabels(FILELABEL)
             keep = graphKeep(PatternsRed,labelss)
-            
+            print(id_graphsIso)
             #Unique 
             ##Test Unique patterns
             
-            #create a dictionnary, for each pattern , indicate the unique pattern it belongs to
-            dicoRepetition = {}
-            
-            dicoUniqueToPattern = {}
-            patternsUnique=[]
-            dejaVu = []
-            c=-1
-            for i in tqdm.tqdm(range(len(id_graphsMono))):
-                if id_graphsMono[i] not in dejaVu:
-                    patternsUnique.append(i)
-                    c = c+1
-                    dejaVu.append(id_graphsMono[i]) 
-                    dicoRepetition[i]=c
-                    dicoUniqueToPattern[c] = []
-                    dicoUniqueToPattern[c].append(i)
-                else:
-                    dicoRepetition[i]=dejaVu.index(id_graphsMono[i])
-                    dicoUniqueToPattern[dejaVu.index(id_graphsMono[i])].append(i)
-            #vectors = createVectorialRepresentation(uniquePatterns,TAILLEGRAPHE)
-            #saveUniqueinCSV(uniquePatterns,id_graphsMono)
-            superMatrice = np.ones((len(dejaVu),TAILLEGRAPHE),dtype=np.int8)*-1
-            for i in range(len(dejaVu)):
-                for j in range(len(dejaVu[i])):
-                        superMatrice[i][dejaVu[i][j]]=1
-            ### transform the matrix into a list of list
-            superMatrice = superMatrice.tolist()
-            #transform each list as a numpy array
-            for i in range(len(superMatrice)):
-                superMatrice[i]=np.array(superMatrice[i])
-            #compute the dot product
-            dotProductMat = metricDotProduct(superMatrice)
-            
-            THRESHOLD_DIST=1
-            vectRepresentation,vectLabels = ComputeRepresentation(patternsUnique,id_graphsMono,labelss,TAILLEGRAPHE)
-            X_train, X_test, y_train, y_test = train_test_split(vectRepresentation, vectLabels, test_size=0.2, random_state=7)
-
-            d_train = xgboost.DMatrix(X_train, label=y_train)
-            d_test = xgboost.DMatrix(X_test, label=y_test)
-            params = {
-            "eta": 0.01,
-            "objective": "binary:logistic",
-            "subsample": 0.5,
-            "base_score": np.mean(y_train),
-            "eval_metric": "logloss",
-            }
-            model = xgboost.train(
-                params,
-                d_train,
-                5000,
-                evals=[(d_test, "test")],
-                verbose_eval=100,
-                early_stopping_rounds=20,
-            )
-            explainer = shap.Explainer(model)
-            shap_values = explainer(vectRepresentation)
-            #Display the importance of each feature
-            #Save the shap values in a file
-            shap_values = shap_values.values
-            shap_values = np.abs(shap_values)
-            #compute the mean importance score of each feature
-            meanShap = np.mean(shap_values,axis=0)
-            
-            #1) Sort the effective results 
-            alpha = sorted(enumerate([s for s in meanShap]),
-                key=lambda ndx_score: ndx_score[1],
-                reverse=True)
-            #create a list of the features sorted, remove features with a 0 importance score
-            feature = []
-            for i in range(len(alpha)):
-                if alpha[i][1]!=0:
-                    feature.append(alpha[i][0])
-            #Save the results in the file : Results+arg+EffectiveShap.txt
-            f=open("results/"+arg+"EffectiveShap.txt","w")
-            for i in range(len(alpha)):
-                if alpha[i][1]!=0:
-                    f.write("Feature "+str(alpha[i][0])+" : "+str(alpha[i][1])+"\n")
-            f.close()
-            #create a dictionary associating to each feature its importance score
-            dicoFeatureImportance = {}
-            for i in range(len(alpha)):
-                dicoFeatureImportance[alpha[i][0]]=alpha[i][1]
+            rr=0
+            for TYPEPATTERN in [id_graphsMono,id_graphsIso,id_graphsClosed]:
+                id_graphsMono = copy.deepcopy(TYPEPATTERN)
+                #create a dictionnary, for each pattern , indicate the unique pattern it belongs to
+                dicoRepetition = {}
                 
-            #2) For each discrimination score, compute the ranking of the patterns
-            growthRate,suppDiff,TruePosi,TrueNega,Strength = computeScoreMono(range(0,TAILLEPATTERN),labelss,id_graphsMono,TAILLEPATTERN)
-            c=0
-            for k in [growthRate,suppDiff,TruePosi,TrueNega,Strength]:
-                results,nbClusters,triIndice,alpha = RankPatternForAScore(k,dicoRepetition,len(k))
-                import rbo
-                #compute the rbo score between the results and the effective results
-                rboScore = rbo.RankingSimilarity(results,feature).rbo()
-                #save in a file named Ranking+arg+score.txt
-                NAME=""
-                if c==0:
-                    NAME = "RankingGrowthRate"
-                    f=open("results/"+arg+"RankingGrowthRate"+NAME+".txt","w")
-                elif c==1:
-                    f=open("results/"+arg+"RankingSuppDiff"+NAME+".txt","w")
-                    NAME = "RankingSuppDiff"
-                elif c==2:
-                    f=open("results/"+arg+"RankingTruePosi"+NAME+".txt","w")
-                    NAME="RankingTruePosi"
-                elif c==3:
-                    f=open("results/"+arg+"RankingTrueNega"+NAME+".txt","w")
-                    NAME="RankingTrueNega"
-                elif c==4:
-                    f=open("results/"+arg+"RankingStrength"+NAME+"s.txt","w")
-                    NAME="RankingStrength"
-                c=c+1
-                for i in range(len(results)):
-                    f.write("Pattern "+str(results[i])+"\n")
-                #add the rbo score to the file
-                f.write("RBO score : "+str(rboScore)+"\n")
-                f.close()
-            
-                #We select only the X first patterns from the discrimination score
-                K = [10,25,50,100,200]
-                for valueK in K:
-                    motifs = copy.deepcopy(k)
-                    results,nbClusters,triIndice,alpha = RankPatternForAScore(motifs,dicoRepetition,valueK)
-                    #1 : print the number of clusters in a file
-                    f=open("results/"+arg+"NbClusters.txt","a")
-                    f.write("K="+str(valueK)+"c="+str(NAME)+"\n")
-                    f.write("NbClusters="+str(nbClusters)+"\n")
-                    
-                    # 2 :
-                    déjaPris = []
-                    scoreCumulé = [] 
-                    scoreActuel=0
-                    for i in range(0,valueK):
-                        #On prend le pattern i  
-                        #On regarde si son pattern Unique est dans le dico
-                        #Si oui, on regarde si le pattern Unique a déjà été pris
-                        #Si non, on le prend en ajoutant son score au score cumulé
-                        if dicoRepetition[triIndice[i]] not in déjaPris:
-                            scoreActuel=scoreActuel+dicoFeatureImportance[dicoRepetition[triIndice[i]]]
-                            scoreCumulé.append(scoreActuel)
-                            déjaPris.append(dicoRepetition[triIndice[i]])
+                dicoUniqueToPattern = {}
+                patternsUnique=[]
+                dejaVu = []
+                c=-1
+                for i in tqdm.tqdm(range(len(id_graphsMono))):
+                    print(id_graphsMono[i])
+                    if id_graphsMono[i]==[]:
+                        dicoRepetition[i]=-1
+                        dicoUniqueToPattern[c] = []
+                    else:
+                        if id_graphsMono[i] not in dejaVu:
+                            patternsUnique.append(i)
+                            c = c+1
+                            dejaVu.append(id_graphsMono[i]) 
+                            dicoRepetition[i]=c
+                            dicoUniqueToPattern[c] = []
+                            dicoUniqueToPattern[c].append(i)
                         else:
-                            scoreCumulé.append(scoreActuel)
-                    print(len(scoreCumulé))
-                    #On fait une figure avec en abscisse le nombre de patterns et en ordonnée le score cumulé
-                    plt.figure()
-                    plt.plot(range(1,len(scoreCumulé)+1),scoreCumulé)
-                    plt.xlabel('Number of patterns')
-                    plt.ylabel('Cumulative effective score of the clusters')
-                    plt.legend()  
-                    # save the plot in a specific directory
-                    plt.savefig("results/"+arg+"CumulativeScore"+str(NAME)+str(valueK)+".pdf")
+                            dicoRepetition[i]=dejaVu.index(id_graphsMono[i])
+                            dicoUniqueToPattern[dejaVu.index(id_graphsMono[i])].append(i)
+                #vectors = createVectorialRepresentation(uniquePatterns,TAILLEGRAPHE)
+                #saveUniqueinCSV(uniquePatterns,id_graphsMono)
+                print(dicoRepetition)
+                superMatrice = np.ones((len(dejaVu),TAILLEGRAPHE),dtype=np.int8)*-1
+                for i in range(len(dejaVu)):
+                    for j in range(len(dejaVu[i])):
+                            superMatrice[i][dejaVu[i][j]]=1
+                ### transform the matrix into a list of list
+                superMatrice = superMatrice.tolist()
+                #transform each list as a numpy array
+                for i in range(len(superMatrice)):
+                    superMatrice[i]=np.array(superMatrice[i])
+                #compute the dot product
+                dotProductMat = metricDotProduct(superMatrice)
                 
-            
-                #3 select the top K clusters
-                K = [10,25,50,100,200]
-                for ks in K:
-                    motifs = copy.deepcopy(k)
-                    results,nbClusters,triIndice,alpha = RankPatternForAScoreCluster(motifs,dicoRepetition,ks)
-                    #1 : print the number of clusters in a file
-                    f=open("results/"+arg+"NbClustersPatterns.txt","a")
-                    f.write("K="+str(ks)+"c="+str(NAME)+"\n")
-                    f.write("NbPatterns="+str(nbClusters)+"\n")
-                    rboScore = rbo.RankingSimilarity(results,feature[0:ks]).rbo()
-                    f.write("RBO score : "+str(rboScore)+"\n")
+                THRESHOLD_DIST=1
+                vectRepresentation,vectLabels = ComputeRepresentation(patternsUnique,id_graphsMono,labelss,TAILLEGRAPHE)
+                X_train, X_test, y_train, y_test = train_test_split(vectRepresentation, vectLabels, test_size=0.2, random_state=7)
+
+                d_train = xgboost.DMatrix(X_train, label=y_train)
+                d_test = xgboost.DMatrix(X_test, label=y_test)
+                params = {
+                "eta": 0.01,
+                "objective": "binary:logistic",
+                "subsample": 0.5,
+                "base_score": np.mean(y_train),
+                "eval_metric": "logloss",
+                }
+                model = xgboost.train(
+                    params,
+                    d_train,
+                    5000,
+                    evals=[(d_test, "test")],
+                    verbose_eval=100,
+                    early_stopping_rounds=20,
+                )
+                if rr==0:
+                    explainer = shap.Explainer(model)
+                    shap_values = explainer(vectRepresentation)
+                    #Display the importance of each feature
+                    #Save the shap values in a file
+                    shap_values = shap_values.values
+                    shap_values = np.abs(shap_values)
+                    #compute the mean importance score of each feature
+                    meanShap = np.mean(shap_values,axis=0)
+                    
+                    #1) Sort the effective results 
+                    alpha = sorted(enumerate([s for s in meanShap]),
+                        key=lambda ndx_score: ndx_score[1],
+                        reverse=True)
+                    #create a list of the features sorted, remove features with a 0 importance score
+                    feature = []
+                    for i in range(len(alpha)):
+                        if alpha[i][1]!=0:
+                            feature.append(alpha[i][0])
+                    #Save the results in the file : Results+arg+EffectiveShap.txt
+                    f=open("results/"+arg+"EffectiveShap.txt","w")
+                    for i in range(len(alpha)):
+                        if alpha[i][1]!=0:
+                            f.write("Feature "+str(alpha[i][0])+" : "+str(alpha[i][1])+"\n")
+                    f.close()
+                    #create a dictionary associating to each feature its importance score
+                    dicoFeatureImportance = {}
+                    for i in range(len(alpha)):
+                        dicoFeatureImportance[alpha[i][0]]=alpha[i][1]
+                    dicoFeatureImportance[-1]=0
+                    #2) For each discrimination score, compute the ranking of the patterns
+                growthRate,suppDiff,TruePosi,TrueNega,Strength = computeScoreMono(range(0,TAILLEPATTERN),labelss,id_graphsMono,TAILLEPATTERN)
+                c=-1
+                megaRes = []
+                for k in [growthRate,suppDiff,TruePosi,TrueNega,Strength]:
+                    results,nbClusters,triIndice,alpha = RankPatternForAScore(k,dicoRepetition,len(k))
+                    import rbo
+                    #compute the rbo score between the results and the effective results
+                    rboScore = rbo.RankingSimilarity(results,feature).rbo()
+                    #save in a file named Ranking+arg+score.txt
+                    NAME=""
+                    if c==0:
+                        NAME = "RankingGrowthRate"
+                        #f=open("results/"+arg+"RankingGrowthRate"+NAME+".txt","w")
+                    elif c==1:
+                        #f=open("results/"+arg+"RankingSuppDiff"+NAME+".txt","w")
+                        NAME = "RankingSuppDiff"
+                    elif c==2:
+                        #f=open("results/"+arg+"RankingTruePosi"+NAME+".txt","w")
+                        NAME="RankingTruePosi"
+                    elif c==3:
+                        #f=open("results/"+arg+"RankingTrueNega"+NAME+".txt","w")
+                        NAME="RankingTrueNega"
+                    elif c==4:
+                        #f=open("results/"+arg+"RankingStrength"+NAME+"s.txt","w")
+                        NAME="RankingStrength"
+                    c=c+1
+                    
                 
+                    #We select only the X first patterns from the discrimination score
+                    K = [10,25,50,100,200,len(k)]
+                    for valueK in K:
+                        motifs = copy.deepcopy(k)
+                        results,nbClusters,triIndice,alpha = RankPatternForAScore(motifs,dicoRepetition,valueK)
+                        #1 : print the number of clusters in a file
+                        f=open("results/"+arg+"NbClusters.txt","a")
+                        f.write("K="+str(valueK)+"c="+str(NAME)+"\n")
+                        f.write("NbClusters="+str(nbClusters)+"\n")
+                        
+                        # 2 :
+                        déjaPris = []
+                        scoreCumulé = [] 
+                        scoreActuel=0
+                        for i in range(0,valueK):
+                            #On prend le pattern i  
+                            #On regarde si son pattern Unique est dans le dico
+                            #Si oui, on regarde si le pattern Unique a déjà été pris
+                            #Si non, on le prend en ajoutant son score au score cumulé
+                            if dicoRepetition[triIndice[i]] not in déjaPris:
+                                scoreActuel=scoreActuel+dicoFeatureImportance[dicoRepetition[triIndice[i]]]
+                                scoreCumulé.append(scoreActuel)
+                                déjaPris.append(dicoRepetition[triIndice[i]])
+                            else:
+                                scoreCumulé.append(scoreActuel)
+                        print(len(scoreCumulé))
+                        if valueK==len(k):
+                            megaRes.append(scoreCumulé)
+                            if c==0:
+                                TABLERESULTS["Score"][rr]="GR"
+                            if c==1:
+                                TABLERESULTS["Score"][rr]="SD"
+                            if c==2:
+                                TABLERESULTS["Score"][rr]="TPR"
+                            if c==3:
+                                TABLERESULTS["Score"][rr]="FPR"
+                            if c==4:
+                                TABLERESULTS["Score"][rr]="STR"
+                            TABLERESULTS["PATTERNS"][rr]=scoreCumulé
+                            rr=rr+1
+                            TABLERESULTS.to_csv("results/Results"+arg+".csv",sep=";",index=False)
+                        #On fait une figure avec en abscisse le nombre de patterns et en ordonnée le score cumulé
+                        plt.figure()
+                        plt.plot(range(1,len(scoreCumulé)+1),scoreCumulé)
+                        plt.xlabel('Number of patterns')
+                        plt.ylabel('Cumulative effective score of the clusters')
+                        plt.legend()  
+                        # save the plot in a specific directory
+                        plt.savefig("results/"+arg+"CumulativeScore"+str(NAME)+str(valueK)+".pdf")
+                    
+                
+                    #3 select the top K clusters
+                    K = [10,25,50,100,200]
+                    for ks in K:
+                        motifs = copy.deepcopy(k)
+                        results,nbClusters,triIndice,alpha = RankPatternForAScoreCluster(motifs,dicoRepetition,ks)
+                        #1 : print the number of clusters in a file
+                        f=open("results/"+arg+"NbClustersPatterns.txt","a")
+                        f.write("K="+str(ks)+"c="+str(NAME)+"\n")
+                        f.write("NbPatterns="+str(nbClusters)+"\n")
+                        featureK = feature[0:ks]
+                        results = results[0:ks]
+                        rboScore = rbo.RankingSimilarity(results,featureK).rbo()
+                        f.write("RBO score : "+str(rboScore)+"\n")
+                    
+                
+                
+                #plot all results on the same figure
+                #legend = name of the discrimination score  
+                plt.figure()
+                for i in range(len(megaRes)):
+                    if i==0:
+                        NAME = "GR"
+                    elif i==1:
+                        NAME = "SD"
+                    elif i==2:
+                        NAME = "TPR"
+                    elif i==3:
+                        NAME = "FPR"
+                    elif i==4:
+                        NAME = "STR"
+                    plt.plot(range(1,len(megaRes[i])+1),megaRes[i],label=NAME)
+                plt.xlabel('Number of patterns')
+                plt.ylabel('Cumulative shap values of the clusters')
+                plt.legend()           
+                plt.savefig("results/"+arg+"CumulativeScoreAll.pdf") 
+                
+                #Same thing with the first 100 patterns
+                plt.figure()
+                for i in range(len(megaRes)):  
+                    if i==0:
+                        NAME = "GR"
+                    elif i==1:
+                        NAME = "SD"
+                    elif i==2:
+                        NAME = "TPR"
+                    elif i==3:
+                        NAME = "FPR"
+                    elif i==4:
+                        NAME = "STR"
+                    plt.plot(range(1,101),megaRes[i][0:100],label=NAME)
+                plt.xlabel('Number of patterns')
+                plt.ylabel('Cumulative shap values of the clusters')
+                plt.legend()
+                plt.savefig("results/"+arg+"CumulativeScoreAll100.pdf")
+                
+                #Same thing with the first 1000 patterns  
+                plt.figure()
+                for i in range(len(megaRes)):  
+                    if i==0:
+                        NAME = "GR"
+                    elif i==1:
+                        NAME = "SD"
+                    elif i==2:
+                        NAME = "TPR"
+                    elif i==3:
+                        NAME = "FPR"
+                    elif i==4:
+                        NAME = "STR"
+                    plt.plot(range(1,1001),megaRes[i][0:1000],label=NAME)
+                plt.xlabel('Number of patterns')
+                plt.ylabel('Cumulative shap values of the clusters')
+                plt.legend()
+                plt.savefig("results/"+arg+"CumulativeScoreAll1000.pdf") 
             
-            
-            
+            #PLOT FINAL : PLOT for each discrimination score the cumulative score of the all patterns for the 3 types of patterns : 
+            for discri in ["GR","SD","TPR","FPR","STR"]:
+                #keep only the lines in TABLERESULTS with the discrimination score discri in the column Score
+                print(TABLERESULTS)
+                df = TABLERESULTS[TABLERESULTS["Score"]==discri]
+                print(df)
+                #reset the index
+                df = df.reset_index(drop=True)
+                print(df)
+                #plot the results : first line for all patterns, second line for induced patterns, third line for closed patterns
+                plt.figure()
+                plt.plot(range(1,len(df["PATTERNS"][0])+1),df["PATTERNS"][0],label="All patterns")
+                plt.plot(range(1,len(df["PATTERNS"][1])+1),df["PATTERNS"][1],label="Induced patterns")
+                plt.plot(range(1,len(df["PATTERNS"][2])+1),df["PATTERNS"][2],label="Closed patterns")
+                plt.xlabel('Number of patterns')
+                plt.ylabel('Cumulative shap values of the clusters')
+                plt.legend()
+                plt.savefig("results/"+arg+"CumulativeScore"+str(discri)+".pdf")
+                
+                
+                
             ###############################################
             """
             resu = []
