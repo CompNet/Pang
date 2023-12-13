@@ -145,8 +145,8 @@ from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.calibration import CalibratedClassifierCV
 
 from sklearn import metrics
-def compute_results(features_train, labels_train, features_test, labels_test):
-    clf = SVC(C=1000)
+def compute_results(features_train, labels_train, features_test, labels_test,typeResults):
+    clf = SVC(C=100)
     clf.fit(features_train,labels_train)
     res = clf.predict(features_test)
     ok = 0
@@ -173,7 +173,12 @@ def compute_results(features_train, labels_train, features_test, labels_test):
     pre = tp / max(float(tp + fp),1)
     if pre + rec > 0:
         f1 = 2 * (pre * rec) / float(pre + rec)
-    return metrics.f1_score(res,labels_test, average=None)[1]
+    if typeResults=="F1":
+        return metrics.f1_score(res,labels_test, average=None)[1]
+    elif typeResults=="Precision":
+        return metrics.precision_score(res,labels_test, average=None)[1]
+    elif typeResults=="Recall":
+        return metrics.recall_score(res,labels_test, average=None)[1]
 
 
 def load_patterns(fileName,TAILLE):
@@ -342,10 +347,10 @@ def computeScoreMono(keep,labels,id_graphs,TAILLEPATTERN):
             supportDiffernt[i]= abs(diffDelta[i])
 
             ##Unusualness
-            unusualness[i]=(n1/len(labels))*(n11/n1-nb1/len(labels))
+            unusualness[i]=(n1/len(labels))*(n11/(n1+0.01)-nb1/len(labels))
 
             ##Generalization Quotient
-            g=1
+            g=10
             generalizationQuotient[i]=n11/(n12+g)
 
             ##Odds Ratio
@@ -384,7 +389,7 @@ def computeScoreMono(keep,labels,id_graphs,TAILLEPATTERN):
     
     
     
-    return growthRate,supportDiffernt,TruePositiveRate,FalsePositiveRate,Strength
+    return growthRate,supportDiffernt,unusualness,generalizationQuotient,OddsRatio,TruePositiveRate,FalsePositiveRate,Strength
 
 
 def MetricOnlyPatterns(metric,patterns):
@@ -1287,12 +1292,50 @@ if __name__ == '__main__':
                     superMatrice[i]=np.array(superMatrice[i])
                 vectRepresentation,vectLabels = ComputeRepresentation(range(0,len(patternsUnique)),dejaVu,labelss,TAILLEGRAPHE)
                 vectRepresentation = np.array(vectRepresentation)
-                X_train, X_test, y_train, y_test = train_test_split(vectRepresentation, vectLabels, test_size=0.2, random_state=7)
+                #RS = 7
+                X_train, X_test, y_train, y_test = train_test_split(vectRepresentation, vectLabels, test_size=0.3, random_state=12, stratify=vectLabels)
+                print("NB PATTERNS")
+                print(len(X_train[0]))
                 #On calcule les scores discriminants pour tous les motifs uniques
-                growth,suppdiff,TPR,FPR,STR = computeScoreMono(patternsUnique,labelss,dejaVu,len(patternsUnique))
+                growth,suppdiff,unusualness,generalizationQuotient,OddsRatio,TPR,FPR,STR = computeScoreMono(patternsUnique,labelss,dejaVu,len(patternsUnique))
+                Fs = []
+                Taille = []
+                """
+                for distance in tqdm.tqdm(range(0,100,2)):
+                    model,patternsStepI,convertisseur,newIdGraphs = selectCurrentClustering(dotProductMat,distance,dejaVu,convertisseur)  
+                    patternsStepI = sorted(patternsStepI)
+                    X_trainB = partialRepresentation(copy.deepcopy(X_train),patternsStepI)
+                    X_testB = partialRepresentation(copy.deepcopy(X_test),patternsStepI)
+                    Taille.append(len(X_trainB[0]))
+                    Fs.append(compute_results(X_trainB,y_train,X_testB,y_test,"F1"))
+                plt.figure()
+                plt.plot(range(0,len(vectRepresentation),2),Fs,label="F1 score")
+
+                plt.xlabel('Distance threshold')
+                plt.ylabel('F1 score')
+                plt.legend()
+                plt.title('Features importance')
+                # save the plot in a specific directory
+                plt.savefig("results/DistThreshold"+str(arg)+".pdf")
+
+
+                """ 
+                #Travail General
                 #Ici on a les X_train et X_test qui sont les vecteurs de représentation des graphes bases sur les motifs uniques
-                for nbCluster in [0,5,10,15]: #Pour differentes valeurs de clusters
-                    model,patternsStepI,convertisseur,newIdGraphs = selectCurrentClustering(dotProductMat,nbCluster,dejaVu,convertisseur)  
+                ### Version avec clustering
+                for nbCluster in [0,3,int(TAILLEGRAPHE/50),int(TAILLEGRAPHE/20),int(TAILLEGRAPHE/15),int(TAILLEGRAPHE/10),int(TAILLEGRAPHE/5),int(TAILLEGRAPHE/3),int(TAILLEGRAPHE/2)]:
+                ### Version sans clustering
+                #for nbCluster in [0]:  
+                    if nbCluster==0:
+                        model = 0
+                        patternsStepI = patternsUnique
+                        convertisseur=[]
+                        for j in range(len(patternsStepI)):
+                            convertisseur.append(j)
+                        newIdGraphs = dejaVu
+                    else:
+                        model,patternsStepI,convertisseur,newIdGraphs = selectCurrentClustering(dotProductMat,nbCluster,dejaVu,convertisseur)  
+                    growth,suppdiff,unusualness,generalizationQuotient,OddsRatio,TPR,FPR,STR = computeScoreMono(patternsStepI,labelss,newIdGraphs,len(patternsStepI))
                     growthT=copy.deepcopy(growth)
                     suppdiffT=copy.deepcopy(suppdiff)
                     TPRT=copy.deepcopy(TPR)
@@ -1302,16 +1345,25 @@ if __name__ == '__main__':
                     # Ils sont stockés dans patternsStepI
                     #On trie d'abord PatternsStepI par ordre croissant pour ne pas avoir de problemes
                     patternsStepI = sorted(patternsStepI)
+                    convertisseur=[]
                     for j in range(len(patternsStepI)):
-                        convertisseur[j]=patternsStepI[j]
-                    print(patternsStepI)
+                        convertisseur.append(patternsStepI[j])
+                    print("LEN")
+                    print(len(patternsStepI))
                     vectRepresentationB = partialRepresentation(copy.deepcopy(vectRepresentation),patternsStepI)
                     X_trainB = partialRepresentation(copy.deepcopy(X_train),patternsStepI)
                     X_testB = partialRepresentation(copy.deepcopy(X_test),patternsStepI)
-
+                    print("Size")
+                    print(len(X_trainB[0]))
+                    BaselineF1 = compute_results(X_trainB,y_train,X_testB,y_test,"F1")
+                    BaselinePrecision = compute_results(X_trainB,y_train,X_testB,y_test,"Precision")
+                    BaselineRecall = compute_results(X_trainB,y_train,X_testB,y_test,"Recall")
+                    
+                    X_trainB = copy.deepcopy(X_train)
+                    X_testB = copy.deepcopy(X_test)
                     #Reprentation de X_train et X_test avec les motifs uniques gardes dans l'etape de clustering
-                    d_train = xgboost.DMatrix(X_trainB, label=y_train)
-                    d_test = xgboost.DMatrix(X_testB, label=y_test)
+                    d_train = xgboost.DMatrix(copy.deepcopy(X_train), label=y_train)
+                    d_test = xgboost.DMatrix(copy.deepcopy(X_test), label=y_test)
                     params = {
                     "eta": 0.01,
                     "objective": "binary:logistic",
@@ -1347,11 +1399,10 @@ if __name__ == '__main__':
         model,data=np.array(X_train),feature_perturbation="interventional",model_output="logloss"
     )
                     shap_values = explainer.shap_values(np.array(X_trainB),y_train)
-                    shap_values = np.abs(shap_values)
                     meanShap = np.mean(shap_values,axis=0)
                     beta = sorted(enumerate([s for s in meanShap]),
                         key=lambda ndx_score: ndx_score[1],
-                        reverse=True)
+                        reverse=False)
                     #Display the importance of each feature
 
                     RandomF = RandomForestClassifier(n_estimators=100,random_state=0)
@@ -1373,115 +1424,323 @@ if __name__ == '__main__':
                     Matrice = np.zeros((8,8))
                     #keep only the indexes of the features of alpha
                     for i in range(len(alpha)):
+                        
+                        alpha[i]=convertisseur[alpha[i][0]]
+                        beta[i]=convertisseur[beta[i][0]]
+                        gamma[i]=convertisseur[gamma[i][0]]
+                        """
                         alpha[i]=alpha[i][0]
                         beta[i]=beta[i][0]
                         gamma[i]=gamma[i][0]
+                        """
                     alpha = np.array(alpha)
                     beta = np.array(beta)
                     gamma = np.array(gamma)
                     import rbo
-                    growthB = selectTopPatterns(growthT,len(patternsStepI)-1,patternsStepI,convertisseur)
-                    suppdiffB = selectTopPatterns(suppdiffT,len(patternsStepI)-1,patternsStepI,convertisseur)
-                    TPRB = selectTopPatterns(TPRT,len(patternsStepI)-1,patternsStepI,convertisseur)
-                    FPRB = selectTopPatterns(FPRT,len(patternsStepI)-1,patternsStepI,convertisseur)
-                    STRB = selectTopPatterns(STRT,len(patternsStepI)-1,patternsStepI,convertisseur)
-                    Metric = [alpha,beta,gamma,growthB,suppdiffB,TPRB,FPRB,STRB]
-                    for i in range(len(Metric)):
-                        for j in range(len(Metric)):
-                            #compute the number of common features between the two metrics in the top 100 patterns
-                            Matrice[i][j] = len(set(Metric[i][0:100]).intersection(set(Metric[j][0:100])))
-                
-                    #plot the results using a heatmap
+                    growthB = copy.deepcopy(growth)
+                    suppdiffB = copy.deepcopy(suppdiff)
+                    TPRB = copy.deepcopy(TPR)
+                    FPRB = copy.deepcopy(FPR)
+                    STRB = copy.deepcopy(STR)
+                    
+                    #on trie les index par score decroissant 
+                    IndexGrowth = sorted(enumerate([s for s in growth]),
+                        key=lambda ndx_score: ndx_score[1],
+                        reverse=True)
+                    IndexSuppdiff = sorted(enumerate([s for s in suppdiff]),
+                        key=lambda ndx_score: ndx_score[1],
+                        reverse=True)
+                    IndexFPR = sorted(enumerate([s for s in FPR]),
+                        key=lambda ndx_score: ndx_score[1],
+                        reverse=True)
+                    IndexSTR = sorted(enumerate([s for s in STR]),
+                        key=lambda ndx_score: ndx_score[1],
+                        reverse=True)
+                    IndexUnusualness = sorted(enumerate([s for s in unusualness]),
+                        key=lambda ndx_score: ndx_score[1],
+                        reverse=True)
+                    IndexGeneralizationQuotient = sorted(enumerate([s for s in generalizationQuotient]),
+                        key=lambda ndx_score: ndx_score[1],
+                        reverse=True)
+                    IndexOddsRatio = sorted(enumerate([s for s in OddsRatio]),
+                        key=lambda ndx_score: ndx_score[1],
+                        reverse=True)
+                    IndexTPR = sorted(enumerate([s for s in TPR]),
+                        key=lambda ndx_score: ndx_score[1],
+                        reverse=True)
+                    
+                    RankingGrowth = []
+                    RankingSuppdiff = []
+                    RankingFPR = []
+                    RankingSTR = []
+                    RankingUnusualness = []
+                    RankingGeneralizationQuotient = []
+                    RankingOddsRatio = []
+                    RankingTPR = []
+                    for i in range(len(IndexGrowth)):
+                        RankingGrowth.append(IndexGrowth[i][0])
+                        RankingSuppdiff.append(IndexSuppdiff[i][0])
+                        RankingFPR.append(IndexFPR[i][0])
+                        RankingSTR.append(IndexSTR[i][0])
+                        RankingUnusualness.append(IndexUnusualness[i][0])
+                        RankingGeneralizationQuotient.append(IndexGeneralizationQuotient[i][0])
+                        RankingOddsRatio.append(IndexOddsRatio[i][0])
+                        RankingTPR.append(IndexTPR[i][0])
+
+                    
+                    #Tableau RBO TOTAL
+                    Metrique = [alpha,beta,gamma,RankingGrowth,RankingSuppdiff,RankingFPR,RankingSTR]
+                    RBOTOTAL = np.zeros((len(Metrique),len(Metrique)))
+                    INTER100 = np.zeros((len(Metrique),len(Metrique)))
+                    
+                    for i in range(len(Metrique)):
+                        for j in range(len(Metrique)):
+                            RBOTOTAL[i][j]=rbo.RankingSimilarity(Metrique[i],Metrique[j]).rbo()
+                            #number of common features between the 2 metrics
+                            INTER100[i][j]=len(set(Metrique[i][0:100]).intersection(set(Metrique[j][0:100])))
+                    #plot the results
                     plt.figure()
                     import seaborn as sns
-                    NameMetric = ["SHAP","Sage","RF","GR","SD","TPR","FPR","STR"]
+                    NameMetric = ["SHAP","Sage","RF","GR","SD","FPR","STR"]
                     #add names to the axes
-                    sns.heatmap(Matrice, annot=True, fmt=".2f", cmap="coolwarm",xticklabels=NameMetric,yticklabels=NameMetric)
+                    sns.heatmap(RBOTOTAL, annot=True, fmt=".2f", cmap="coolwarm",xticklabels=NameMetric,yticklabels=NameMetric)
                     plt.xlabel('Metrics')
                     plt.ylabel('Metrics')
                     # save the plot in a specific directory
-                    plt.savefig("results/"+arg+str(dfr)+str(nbCluster)+"heatmapInter.pdf")
+                    plt.savefig("results/"+arg+"RBOTOTAL.pdf")
 
+                    plt.figure()
+                    NameMetric = ["SHAP","Sage","RF","GR","SD","FPR","STR"]
+                    #add names to the axes
+                    sns.heatmap(INTER100, annot=True, fmt=".2f", cmap="coolwarm",xticklabels=NameMetric,yticklabels=NameMetric)
+                    plt.xlabel('Metrics')
+                    plt.ylabel('Metrics')
+                    # save the plot in a specific directory
+                    plt.savefig("results/"+arg+"INTER100.pdf")
+                    """
+                    ### CODE EN DESSOUS : TRAVAIL SUR LES PAIRS DE METRIQUES
+                    shapSage = []
+                    shapRF = []
+                    RFSD = []
+                    RFSTR = []
+                    GRSD = []
+                    SHAPSD = []
+                    SDSTR = []
+                    SDFPR = []
+                    SDTPR = []
+                    SHAPSTR = []
+                    Metric = [alpha,beta,gamma,growthB,suppdiffB,TPRB,FPRB,STRB]
+                    TAILLEGRAPHIQUE=len(patternsStepI)-1
+                    for NbPAt in tqdm.tqdm(range(0,TAILLEGRAPHIQUE)):
+                        # Je t'exlique le principe
+                        # Pour chaque métrique, on va prendre les 100 premiers motifs
+                        # On va calculer le RBO entre certaines pairs de métriques
+                        # Prendre toutes les paires de métriques est trop long et on ne peut pas les afficher
+                        # On va donc prendre les paires de métriques suivantes :
+                        # SHAP et SAGE
+                        # SHAP et RF
+                        # RF ET SD
+                        # RF ET STR
+                        # GR ET SD
+                        # SHAP ET SD    
+
+                        # D'abord, on cree les listes pour stocker les RBO
+                        #On prend les 100 premiers motifs
+                        shapSage.append(rbo.RankingSimilarity(alpha[0:NbPAt],beta[0:NbPAt]).rbo())
+                        shapRF.append(rbo.RankingSimilarity(alpha[0:NbPAt],gamma[0:NbPAt]).rbo())
+                        RFSD.append(rbo.RankingSimilarity(gamma[0:NbPAt],RankingSuppdiff[0:NbPAt]).rbo())
+                        RFSTR.append(rbo.RankingSimilarity(gamma[0:NbPAt],RankingSTR[0:NbPAt]).rbo())
+                        GRSD.append(rbo.RankingSimilarity(RankingGrowth[0:NbPAt],RankingSuppdiff[0:NbPAt]).rbo())
+                        SHAPSD.append(rbo.RankingSimilarity(alpha[0:NbPAt],RankingSuppdiff[0:NbPAt]).rbo())
+                        SDSTR.append(rbo.RankingSimilarity(RankingSuppdiff[0:NbPAt],RankingSTR[0:NbPAt]).rbo())
+
+
+                    #Onaffiche les résultats
+                    plt.figure()
+                    plt.plot(range(0,TAILLEGRAPHIQUE),shapSage,label="SHAP-SAGE")
+                    plt.plot(range(0,TAILLEGRAPHIQUE),shapRF,label="SHAP-RF")
+                    plt.plot(range(0,TAILLEGRAPHIQUE),RFSD,label="RF-SD")
+                    plt.plot(range(0,TAILLEGRAPHIQUE),RFSTR,label="RF-STR")
+                    plt.plot(range(0,TAILLEGRAPHIQUE),GRSD,label="GR-SD")
+                    plt.plot(range(0,TAILLEGRAPHIQUE),SHAPSD,label="SHAP-SD")
+                    plt.plot(range(0,TAILLEGRAPHIQUE),SDSTR,label="SD-STR")
+
+                    plt.xlabel('Number of features')
+                    plt.ylabel('RBO')
+                    #METTRE LA LEGENDE A DROITE
+                    plt.legend()
+                    
+                    # save the plot in a specific directory
+                    plt.savefig("results/"+arg+str(dfr)+str(nbCluster)+"RBOComparison.pdf")
+
+                
                     #2) Compute the F1 score for each number of features
                     #for i in tqdm.tqdm(range(1,len(patternsUnique),int(len(patternsUnique)/100))):
-                    for i in tqdm.tqdm(range(1,50)):
+                
+                    rerere = []
+                    rererePre = []
+                    rerereRec = []
+                    #Diviser en 100 intervalles entre 1 et le nombre de motifs uniques
+                    #creer une liste avec les indices a prendre pour chaque intervalle
+                    RangeTravail = range(1,len(patternsUnique),int(len(patternsUnique)/50))
+                    for i in tqdm.tqdm(RangeTravail):
+                        
+                        keepP = []
+                        keepPP = []
+                        keeePPP = []
                         #select the top i features
                         for dd in range(i):
-                            keepP.append(convertisseur[alpha[dd]])
+                            keepP.append(alpha[dd])
                         #keep only the features selected in keepP
                         #don't use loops, it's too slow
                         X_train2 = X_train[:,keepP]
                         X_test2 = X_test[:,keepP]
                         #compute the F1 score
-                        score = compute_results(X_train2,y_train,X_test2, y_test)
+                        score = compute_results(X_train2,y_train,X_test2, y_test,"F1")
                         rerere.append(score)
+                        score = compute_results(X_train2,y_train,X_test2, y_test,"Precision")
+                        rererePre.append(score)
+                        score = compute_results(X_train2,y_train,X_test2, y_test,"Recall")
+                        rerereRec.append(score)
 
                         #select the top i features
                         for dd in range(i):
-                            keepPP.append(convertisseur[beta[dd]])
+                            keepPP.append(beta[dd])
                         #Transform X_TRAIN and X_TEST keeping only the features selected in keepP
                         X_train2 =X_train[:,keepPP]
                         X_test2 = X_test[:,keepPP]
                         #compute the F1 score
-                        score = compute_results(X_train2,y_train,X_test2, y_test)
+                        score = compute_results(X_train2,y_train,X_test2, y_test,"F1")
                         rerere.append(score)
 
                         for dd in range(i):
-                            keeePPP.append(convertisseur[gamma[dd]])
+                            keeePPP.append(gamma[dd])
                         #Transform X_TRAIN and X_TEST keeping only the features selected in keepP
                         X_train2 = X_train[:,keeePPP]
                         X_test2 = X_test[:,keeePPP]
-                        score = compute_results(X_train2,y_train,X_test2, y_test)
+                        score = compute_results(X_train2,y_train,X_test2, y_test,"F1")
                         rerere.append(score)
-
+                        print(len(keepP))
+                        print(len(keepPP))
+                        print(len(keeePPP))
+                        
                         #Same thing for other metrics : growth, support, TPR, FPR, ST
-                        for metric in [growthB,suppdiffB,TPRB,FPRB,STRB]:
-                            patternsUnique2 = selectTopPatterns(copy.deepcopy(metric),i,patternsStepI,convertisseur)
-                            patternsUnique2 = np.array(patternsUnique2)
+                        for metric in [RankingGrowth,RankingSuppdiff,RankingFPR,RankingSTR,RankingTPR,RankingUnusualness,RankingGeneralizationQuotient,RankingOddsRatio]:
+                            patternsUnique2 = metric[0:i]
+                            print(len(patternsUnique2))
+                        #for metric in [growth,suppdiff,FPR,STR]:
+                            #patternsUnique2 = selectTopPatterns(copy.deepcopy(metric),i,patternsStepI,convertisseur)
+                            #patternsUnique2 = np.array(patternsUnique2)
+                            #print(len(patternsUnique2))
                             X_train2 = X_train[:,patternsUnique2]
                             X_test2 = X_test[:,patternsUnique2]
-                            score = compute_results(X_train2,y_train,X_test2, y_test)
+                            score = compute_results(X_train2,y_train,X_test2, y_test,"F1")
                             rerere.append(score)
+                            
+                            score = compute_results(X_train2,y_train,X_test2, y_test,"Precision")
+                            rererePre.append(score)
+                            score = compute_results(X_train2,y_train,X_test2, y_test,"Recall")
+                            rerereRec.append(score)
+                            
                     #plot the results
-                    plt.figure()
                     #values mod 6 : 0 for SHAP, 1 for growth, 2 for suppdiff, 3 for TPR, 4 for FPR, 5 for STR
                     #plot each curve separately
-                    shaps = []
-                    sage = []
-                    growths = []
-                    suppdiffs = []
-                    TPRs = []
-                    FPRs = []
-                    STRs = []
-                    randomF = []
-                    for j in range(len(rerere)):
-                        if j%8==0:
-                            shaps.append(rerere[j])
-                        elif j%8==1:
-                            sage.append(rerere[j])
-                        elif j%8==2:
-                            randomF.append(rerere[j])
-                        elif j%8==3:
-                            growths.append(rerere[j])
-                        elif j%8==4:
-                            suppdiffs.append(rerere[j])
-                        elif j%8==5:
-                            TPRs.append(rerere[j])
-                        elif j%8==6:
-                            FPRs.append(rerere[j])
-                        elif j%8==7:
-                            STRs.append(rerere[j])
-                    plt.plot(range(1,len(shaps)+1),shaps,label="SHAP")
-                    plt.plot(range(1,len(sage)+1),sage,label="Sage")
-                    plt.plot(range(1,len(growths)+1),growths,label="Growth")
-                    plt.plot(range(1,len(suppdiffs)+1),suppdiffs,label="SuppDiff")
-                    plt.plot(range(1,len(TPRs)+1),TPRs,label="TPR")
-                    plt.plot(range(1,len(FPRs)+1),FPRs,label="FPR")
-                    plt.plot(range(1,len(STRs)+1),STRs,label="STR")
-                    plt.plot(range(1,len(randomF)+1),randomF,label="Random Forest")
-                    plt.xlabel('Number of features')
-                    plt.ylabel('FA-Score of the anomalous class')
-                    plt.legend()
-                    # save the plot in a specific directory
-                    plt.savefig("results/"+arg+str(dfr)+str(nbCluster)+"F1ScoreNEW.pdf")
+                    for KK in [rerere]:
+                        shaps = []
+                        sage = []
+                        growths = []
+                        suppdiffs = []
+                        TPRs = []
+                        FPRs = []
+                        STRs = []
+                        randomF = []
+                        unusualnesss = []
+                        generalizationQuotients = []
+                        OddsRatios = []
+                        
+                        for j in range(len(KK)):
+                            if j%7==0:
+                                shaps.append(KK[j])
+                            elif j%7==1:
+                                sage.append(KK[j])
+                            elif j%7==2:
+                                randomF.append(KK[j])
+                            elif j%7==3:
+                                growths.append(KK[j])
+                            elif j%7==4:
+                                suppdiffs.append(KK[j])
+                            elif j%7==5:
+                                FPRs.append(KK[j])
+                            elif j%7==6:
+                                STRs.append(KK[j])
+                            
+                        for j in range(len(KK)):
+                            if j%8==0:
+                                growths.append(KK[j])
+                            elif j%8==1:
+                                suppdiffs.append(KK[j])
+                            elif j%8==2:
+                                FPRs.append(KK[j])
+                            elif j%8==3:
+                                STRs.append(KK[j])
+                            elif j%8==4:
+                                TPRs.append(KK[j])
+                            elif j%8==5:
+                                unusualnesss.append(KK[j])
+                            elif j%8==6:
+                                generalizationQuotients.append(KK[j])
+                            elif j%8==7:
+                                OddsRatios.append(KK[j])
+
+                        plt.figure()
+                        plt.plot(range(1,len(growths)+1),growths,label="Growth")
+                        plt.plot(range(1,len(suppdiffs)+1),suppdiffs,label="SuppDiff")
+                        plt.plot(range(1,len(FPRs)+1),FPRs,label="FPR")
+                        plt.plot(range(1,len(STRs)+1),STRs,label="STR")
+                        plt.plot(range(1,len(TPRs)+1),TPRs,label="TPR")
+                        plt.plot(range(1,len(unusualnesss)+1),unusualnesss,label="Unusualness")
+                        plt.plot(range(1,len(generalizationQuotients)+1),generalizationQuotients,label="Generalization Quotient")
+                        plt.plot(range(1,len(OddsRatios)+1),OddsRatios,label="Odds Ratio")
+                        plt.xlabel('Percentage of features selected')
+                        plt.ylabel('F1')
+                        typeResults="F1"
                     
+                        
+                            elif j%8==7:
+                                unusualnesss.append(KK[j])
+                            elif j%8==8:
+                                generalizationQuotients.append(KK[j])
+                            elif j%8==9:
+                                OddsRatios.append(KK[j])
+                            
+                        plt.figure()
+                        plt.plot(range(1,len(shaps)+1),shaps,label="SHAP")
+                        plt.plot(range(1,len(sage)+1),sage,label="Sage")
+                        plt.plot(range(1,len(growths)+1),growths,label="Growth")
+                        plt.plot(range(1,len(suppdiffs)+1),suppdiffs,label="SuppDiff")
+                        plt.plot(range(1,len(FPRs)+1),FPRs,label="FPR")
+                        plt.plot(range(1,len(STRs)+1),STRs,label="STR")
+                        plt.plot(range(1,len(randomF)+1),randomF,label="Random Forest")
+                        plt.xlabel('Percentage of features selected')
+                        plt.ylabel('F1')
+                        typeResults="F1"
+                        
+                        if KK==rerere:
+                            plt.ylabel('F1')
+                            typeResults="F1"
+                            #add a point for the baseline
+                            #not a line because it's not a curve
+                            plt.plot(len(shaps)+1,BaselineF1,"o",label="ALL Patterns")
+                        elif KK==rererePre:
+                            plt.ylabel('Precision')
+                            typeResults="Precision"
+                            plt.plot(len(shaps)+1,BaselinePrecision,"o",label="ALL Patterns")
+                        elif KK==rerereRec:
+                            plt.ylabel('Recall')
+                            typeResults="Recall"
+                            plt.plot(len(shaps)+1,BaselineRecall,"o",label="ALL Patterns")
+                        
+                        plt.legend()
+                        # save the plot in a specific directory
+                        plt.savefig("results/"+arg+"ClassificationDISCRISCORE.pdf")
+                    """
