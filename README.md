@@ -14,7 +14,8 @@ Pang is free software: you can redistribute it and/or modify it under the terms 
 
 ## Description
 Pang is an algorithm which represents and classifies a collection of graphs according to their frequent patterns (subgraphs). The detail of this algorithm are described in an article [[P'23](#references)].
-This work was conducted in the framework of the DeCoMaP ANR project (Detection of corruption in public procurement markets -- ANR-19-CE38-0004). 
+
+This work was conducted in the framework of the DeCoMaP ANR project (_Detection of corruption in public procurement markets_ -- [ANR-19-CE38-0004](https://anr.fr/Project-ANR-19-CE38-0004)). 
 
 If you use this source code, please cite article [[P'23](#references)]:
 ```bibtex
@@ -28,7 +29,6 @@ If you use this source code, please cite article [[P'23](#references)]:
   publisher = {Springer},
   pages     = {69-87},
   doi       = {10.1007/978-3-031-43427-3_5},
-  url       = {https://link.springer.com/chapter/10.1007/978-3-031-43427-3_5},
 }
 ```
 
