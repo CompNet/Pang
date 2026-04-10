@@ -2,7 +2,7 @@ Pang v1.0.0
 ===================
 *Pattern-Based Anomaly Detection in Graphs*
 
-* Copyright 2021-2023 Lucas Potin & Rosa Figueiredo & Vincent Labatut & Christine Largeron
+* Copyright 2021-2023 Lucas Potin, Rosa Figueiredo, Vincent Labatut & Christine Largeron
 
 Pang is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation. For source availability and license information see licence.txt
 
